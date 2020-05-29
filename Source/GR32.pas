@@ -1085,7 +1085,12 @@ type
     procedure Resample(
       Dst: TCustomBitmap32; DstRect: TRect; DstClip: TRect;
       Src: TCustomBitmap32; SrcRect: TRect;
-      CombineOp: TDrawMode; CombineCallBack: TPixelCombineEvent); virtual; abstract;
+      CombineOp: TDrawMode; CombineCallBack: TPixelCombineEvent); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+    procedure Resample(
+      Dst: TCustomBitmap32; DstRect: TRect; DstClip: TRect;
+      SrcBits: PColor32Array; SrcWidth, SrcHeight: Integer; SrcRect: TRect;
+      CombineOp: TDrawMode; CombineMode: TCombineMode; MasterAlpha: Cardinal;
+      OuterColor: TColor32; CombineCallBack: TPixelCombineEvent); overload; virtual; abstract;
     procedure AssignTo(Dst: TPersistent); override;
     property ClipRect: TRect read FClipRect;
   public
@@ -6586,6 +6591,15 @@ end;
 procedure TCustomResampler.PrepareSampling;
 begin
   FClipRect := FBitmap.ClipRect;
+end;
+
+procedure TCustomResampler.Resample(Dst: TCustomBitmap32; DstRect,
+  DstClip: TRect; Src: TCustomBitmap32; SrcRect: TRect; CombineOp: TDrawMode;
+  CombineCallBack: TPixelCombineEvent);
+begin
+  Self.Resample(Dst, DstRect, DstClip, Src.Bits, Src.Width,
+    Src.Height, SrcRect, CombineOp, Src.CombineMode, Src.MasterAlpha,
+    Src.OuterColor, CombineCallBack);
 end;
 
 procedure TCustomResampler.SetPixelAccessMode(
