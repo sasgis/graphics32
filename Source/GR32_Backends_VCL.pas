@@ -37,9 +37,19 @@ interface
 
 {$I GR32.inc}
 
+{-$DEFINE UPDATERECT_DEBUGDRAW}
+{-$DEFINE UPDATERECT_DEBUGDRAW_RANDOM_COLORS}
+
 uses
-  SysUtils, Classes, Windows, Graphics, GR32, GR32_Backends, GR32_Containers,
-  GR32_Image, GR32_Backends_Generic, GR32_Paths;
+  System.SysUtils, System.Classes,
+  WinAPI.Windows,
+  VCL.Graphics, VCL.Controls,
+  GR32,
+  GR32_Backends,
+  GR32_Containers,
+  GR32_Image,
+  GR32_Backends_Generic,
+  GR32_Paths;
 
 type
   { TGDIBackend }
@@ -47,9 +57,16 @@ type
     It uses the GDI to manage and provide the buffer and additional
     graphics sub system features. The backing buffer is kept in memory. }
 
-  TGDIBackend = class(TCustomBackend, IPaintSupport,
-    IBitmapContextSupport, IDeviceContextSupport,
-    ITextSupport, IFontSupport, ICanvasSupport, ITextToPathSupport)
+  TGDIBackend = class(TCustomBackend,
+      IPaintSupport,
+      IBitmapContextSupport,
+      IDeviceContextSupport,
+      ITextSupport,
+      IFontSupport,
+      ICanvasSupport,
+      ITextToPathSupport,
+      IUpdateRectSupport
+    )
   private
     procedure FontChangedHandler(Sender: TObject);
     procedure CanvasChangedHandler(Sender: TObject);
@@ -106,11 +123,6 @@ type
     procedure Textout(var DstRect: TRect; const Flags: Cardinal; const Text: string); overload;
     function  TextExtent(const Text: string): TSize;
 
-    procedure TextoutW(X, Y: Integer; const Text: Widestring); overload;
-    procedure TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring); overload;
-    procedure TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring); overload;
-    function  TextExtentW(const Text: Widestring): TSize;
-
     { IFontSupport }
     function GetOnFontChange: TNotifyEvent;
     procedure SetOnFontChange(Handler: TNotifyEvent);
@@ -122,9 +134,9 @@ type
     property OnFontChange: TNotifyEvent read FOnFontChange write FOnFontChange;
 
     { ITextToPathSupport }
-    procedure TextToPath(Path: TCustomPath; const X, Y: TFloat; const Text: WideString); overload;
-    procedure TextToPath(Path: TCustomPath; const DstRect: TFloatRect; const Text: WideString; Flags: Cardinal); overload;
-    function MeasureText(const DstRect: TFloatRect; const Text: WideString; Flags: Cardinal): TFloatRect;
+    procedure TextToPath(Path: TCustomPath; const X, Y: TFloat; const Text: string); overload;
+    procedure TextToPath(Path: TCustomPath; const DstRect: TFloatRect; const Text: string; Flags: Cardinal); overload;
+    function MeasureText(const DstRect: TFloatRect; const Text: string; Flags: Cardinal): TFloatRect;
 
     { ICanvasSupport }
     function GetCanvasChange: TNotifyEvent;
@@ -136,6 +148,10 @@ type
 
     property Canvas: TCanvas read GetCanvas;
     property OnCanvasChange: TNotifyEvent read GetCanvasChange write SetCanvasChange;
+
+    { IUpdateRectSupport }
+    procedure InvalidateRect(AControl: TWinControl; const ARect: TRect);
+    procedure GetUpdateRects(AControl: TWinControl; AUpdateRects: TRectList; AReservedCapacity: integer; var AFullUpdate: boolean);
   end;
 
   { TGDIMMFBackend }
@@ -185,6 +201,8 @@ type
 implementation
 
 uses
+  System.Math,
+  System.Types,
   GR32_Text_VCL;
 
 var
@@ -256,8 +274,8 @@ begin
   end;
 end;
 
-function TGDIBackend.MeasureText(const DstRect: TFloatRect;
-  const Text: WideString; Flags: Cardinal): TFloatRect;
+function TGDIBackend.MeasureText(const DstRect: TFloatRect; const Text: string;
+  Flags: Cardinal): TFloatRect;
 begin
   Result := GR32_Text_VCL.MeasureText(Font.Handle, DstRect, Text, Flags);
 end;
@@ -314,39 +332,14 @@ begin
   Result.cX := 0;
   Result.cY := 0;
   if Handle <> 0 then
-    Windows.GetTextExtentPoint32(Handle, PChar(Text), Length(Text), Result)
+    WinAPI.Windows.GetTextExtentPoint32(Handle, PChar(Text), Length(Text), Result)
   else
   begin
     StockBitmap.Canvas.Lock;
     try
       DC := StockBitmap.Canvas.Handle;
       OldFont := SelectObject(DC, Font.Handle);
-      Windows.GetTextExtentPoint32(DC, PChar(Text), Length(Text), Result);
-      SelectObject(DC, OldFont);
-    finally
-      StockBitmap.Canvas.Unlock;
-    end;
-  end;
-end;
-
-function TGDIBackend.TextExtentW(const Text: Widestring): TSize;
-var
-  DC: HDC;
-  OldFont: HGDIOBJ;
-begin
-  UpdateFont;
-  Result.cX := 0;
-  Result.cY := 0;
-
-  if Handle <> 0 then
-    Windows.GetTextExtentPoint32W(Handle, PWideChar(Text), Length(Text), Result)
-  else
-  begin
-    StockBitmap.Canvas.Lock;
-    try
-      DC := StockBitmap.Canvas.Handle;
-      OldFont := SelectObject(DC, Font.Handle);
-      Windows.GetTextExtentPoint32W(DC, PWideChar(Text), Length(Text), Result);
+      WinAPI.Windows.GetTextExtentPoint32(DC, PChar(Text), Length(Text), Result);
       SelectObject(DC, OldFont);
     finally
       StockBitmap.Canvas.Unlock;
@@ -372,37 +365,6 @@ begin
   FOwner.Changed(MakeRect(X, Y, X + Extent.cx + 1, Y + Extent.cy + 1));
 end;
 
-procedure TGDIBackend.TextoutW(X, Y: Integer; const Text: Widestring);
-var
-  Extent: TSize;
-begin
-  UpdateFont;
-
-  if not FOwner.MeasuringMode then
-  begin
-    if FOwner.Clipping then
-      ExtTextoutW(Handle, X, Y, ETO_CLIPPED, @FOwner.ClipRect, PWideChar(Text), Length(Text), nil)
-    else
-      ExtTextoutW(Handle, X, Y, 0, nil, PWideChar(Text), Length(Text), nil);
-  end;
-
-  Extent := TextExtentW(Text);
-  FOwner.Changed(MakeRect(X, Y, X + Extent.cx + 1, Y + Extent.cy + 1));
-end;
-
-procedure TGDIBackend.TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring);
-var
-  Extent: TSize;
-begin
-  UpdateFont;
-
-  if not FOwner.MeasuringMode then
-    ExtTextoutW(Handle, X, Y, ETO_CLIPPED, @ClipRect, PWideChar(Text), Length(Text), nil);
-
-  Extent := TextExtentW(Text);
-  FOwner.Changed(MakeRect(X, Y, X + Extent.cx + 1, Y + Extent.cy + 1));
-end;
-
 procedure TGDIBackend.Textout(X, Y: Integer; const ClipRect: TRect; const Text: string);
 var
   Extent: TSize;
@@ -416,18 +378,7 @@ begin
   FOwner.Changed(MakeRect(X, Y, X + Extent.cx + 1, Y + Extent.cy + 1));
 end;
 
-procedure TGDIBackend.TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring);
-begin
-  UpdateFont;
-
-  if not FOwner.MeasuringMode then
-    DrawTextW(Handle, PWideChar(Text), Length(Text), DstRect, Flags);
-
-  FOwner.Changed(DstRect);
-end;
-
-procedure TGDIBackend.TextToPath(Path: TCustomPath; const X, Y: TFloat;
-  const Text: WideString);
+procedure TGDIBackend.TextToPath(Path: TCustomPath; const X, Y: TFloat; const Text: string);
 var
   R: TFloatRect;
 begin
@@ -436,7 +387,7 @@ begin
 end;
 
 procedure TGDIBackend.TextToPath(Path: TCustomPath; const DstRect: TFloatRect;
-  const Text: WideString; Flags: Cardinal);
+  const Text: string; Flags: Cardinal);
 begin
   GR32_Text_VCL.TextToPath(Font.Handle, Path, DstRect, Text, Flags);
 end;
@@ -447,14 +398,14 @@ begin
   begin
     SelectObject(Handle, Font.Handle);
     SetTextColor(Handle, ColorToRGB(Font.Color));
-    SetBkMode(Handle, Windows.TRANSPARENT);
+    SetBkMode(Handle, WinAPI.Windows.TRANSPARENT);
     FFontHandle := Font.Handle;
   end
   else
   begin
     SelectObject(Handle, FFontHandle);
     SetTextColor(Handle, ColorToRGB(Font.Color));
-    SetBkMode(Handle, Windows.TRANSPARENT);
+    SetBkMode(Handle, WinAPI.Windows.TRANSPARENT);
   end;
 end;
 
@@ -524,6 +475,76 @@ begin
   Result := FOnFontChange;
 end;
 
+procedure TGDIBackend.InvalidateRect(AControl: TWinControl; const ARect: TRect);
+begin
+  if (AControl.HandleAllocated) then
+    WinAPI.Windows.InvalidateRect(AControl.Handle, @ARect, False);
+end;
+
+procedure TGDIBackend.GetUpdateRects(AControl: TWinControl; AUpdateRects: TRectList; AReservedCapacity: integer; var AFullUpdate: boolean);
+var
+  RegionType: integer;
+  UpdateRegion: HRGN;
+  RegionSize: integer;
+  RegionData: PRgnData;
+  r: TRect;
+  i: integer;
+begin
+  UpdateRegion := CreateRectRgn(0,0,0,0);
+  try
+    RegionType := GetUpdateRgn(AControl.Handle, UpdateRegion, False);
+
+    case RegionType of
+
+      COMPLEXREGION:
+        begin
+          RegionSize := GetRegionData(UpdateRegion, 0, nil);
+
+          if (RegionSize > 0) then
+          begin
+            GetMem(RegionData, RegionSize);
+            try
+              {$IFOPT C+} // ST: IF ASSERTIONS ON
+              RegionSize :=
+              {$ENDIF}
+              GetRegionData(UpdateRegion, RegionSize, RegionData);
+              Assert(RegionSize <> 0);
+
+              // Final count is known so set capacity to avoid reallocation
+              AUpdateRects.Capacity := Max(AUpdateRects.Capacity, AUpdateRects.Count + AReservedCapacity + integer(RegionData.rdh.nCount));
+
+              for i := 0 to RegionData.rdh.nCount-1 do
+                AUpdateRects.Add(PPolyRects(@RegionData.Buffer)[i]);
+            finally
+              FreeMem(RegionData);
+            end;
+          end;
+        end;
+
+      NULLREGION:
+        AFullUpdate := True;
+
+      SIMPLEREGION:
+        begin
+          GetUpdateRect(AControl.Handle, r, False);
+          if (GR32.EqualRect(r, AControl.ClientRect)) then
+            AFullUpdate := True
+          else
+          begin
+            AUpdateRects.Capacity := Max(AUpdateRects.Capacity, AUpdateRects.Count + AReservedCapacity + 1);
+            AUpdateRects.Add(r);
+          end;
+        end
+
+    else
+      // Error - Ignore it
+      AFullUpdate := True
+    end;
+  finally
+    DeleteObject(UpdateRegion);
+  end;
+end;
+
 procedure TGDIBackend.SetCanvasChange(Handler: TNotifyEvent);
 begin
   FOnCanvasChange := Handler;
@@ -590,18 +611,58 @@ begin
 
 end;
 
+{$IFDEF UPDATERECT_DEBUGDRAW}
+const
+  clDebugDrawFill = TColor32($30FF0000);
+  clDebugDrawFrame = TColor32($90FF0000);
+{$ENDIF}
+
 procedure TGDIBackend.DoPaint(ABuffer: TBitmap32; AInvalidRects: TRectList;
   ACanvas: TCanvas; APaintBox: TCustomPaintBox32);
 var
   i: Integer;
+{$IFDEF UPDATERECT_DEBUGDRAW}
+  C1, C2: TColor32;
+  r: TRect;
+{$ENDIF}
 begin
+{$IFDEF UPDATERECT_DEBUGDRAW}
+{$IFDEF UPDATERECT_DEBUGDRAW_RANDOM_COLORS}
+  C1 := Random(MaxInt) AND $00FFFFFF;
+  C2 := C1 OR $90000000;
+  C1 := C1 OR $30000000;
+{$ELSE}
+  C1 := clDebugDrawFill;
+  C2 := clDebugDrawFrame;
+{$ENDIF}
+{$ENDIF}
+
   if AInvalidRects.Count > 0 then
+  begin
     for i := 0 to AInvalidRects.Count - 1 do
+    begin
+{$IFDEF UPDATERECT_DEBUGDRAW}
+      r := AInvalidRects[i]^;
+      ABuffer.BeginLockUpdate;
+      ABuffer.FillRectTS(r, C1);
+      ABuffer.FrameRectTS(r, C2);
+      ABuffer.EndLockUpdate;
+{$ENDIF}
       with AInvalidRects[i]^ do
-        BitBlt(ACanvas.Handle, Left, Top, Right - Left, Bottom - Top, ABuffer.Handle, Left, Top, SRCCOPY)
-  else
+        BitBlt(ACanvas.Handle, Left, Top, Right - Left, Bottom - Top, ABuffer.Handle, Left, Top, SRCCOPY);
+    end;
+  end else
+  begin
+{$IFDEF UPDATERECT_DEBUGDRAW}
+      r := APaintBox.GetViewportRect;
+      ABuffer.BeginLockUpdate;
+      ABuffer.FillRectTS(r, C1);
+      ABuffer.FrameRectTS(r, C2);
+      ABuffer.EndLockUpdate;
+{$ENDIF}
     with APaintBox.GetViewportRect do
       BitBlt(ACanvas.Handle, Left, Top, Right - Left, Bottom - Top, ABuffer.Handle, Left, Top, SRCCOPY);
+  end;
 end;
 
 

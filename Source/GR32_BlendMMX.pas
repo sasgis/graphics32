@@ -45,18 +45,18 @@ uses
 function BlendReg_MMX(F, B: TColor32): TColor32;
 procedure BlendMem_MMX(F: TColor32; var B: TColor32);
 
-function BlendRegEx_MMX(F, B, M: TColor32): TColor32;
-procedure BlendMemEx_MMX(F: TColor32; var B:TColor32; M: TColor32);
+function BlendRegEx_MMX(F, B: TColor32; M: Cardinal): TColor32;
+procedure BlendMemEx_MMX(F: TColor32; var B:TColor32; M: Cardinal);
 
-function BlendRegRGB_MMX(F, B, W: TColor32): TColor32;
-procedure BlendMemRGB_MMX(F: TColor32; var B: TColor32; W: TColor32);
+function BlendRegRGB_MMX(F, B: TColor32; W: Cardinal): TColor32;
+procedure BlendMemRGB_MMX(F: TColor32; var B: TColor32; W: Cardinal);
 
 procedure BlendLine_MMX(Src, Dst: PColor32; Count: Integer);
-procedure BlendLineEx_MMX(Src, Dst: PColor32; Count: Integer; M: TColor32);
+procedure BlendLineEx_MMX(Src, Dst: PColor32; Count: Integer; M: Cardinal);
 
-function CombineReg_MMX(X, Y, W: TColor32): TColor32;
-procedure CombineMem_MMX(F: TColor32; var B: TColor32; W: TColor32);
-procedure CombineLine_MMX(Src, Dst: PColor32; Count: Integer; W: TColor32);
+function CombineReg_MMX(X, Y: TColor32; W: Cardinal): TColor32;
+procedure CombineMem_MMX(F: TColor32; var B: TColor32; W: Cardinal);
+procedure CombineLine_MMX(Src, Dst: PColor32; Count: Integer; W: Cardinal);
 
 procedure EMMS_MMX;
 
@@ -69,7 +69,7 @@ function ColorMax_EMMX(C1, C2: TColor32): TColor32;
 function ColorMin_EMMX(C1, C2: TColor32): TColor32;
 function ColorDifference_MMX(C1, C2: TColor32): TColor32;
 function ColorExclusion_MMX(C1, C2: TColor32): TColor32;
-function ColorScale_MMX(C, W: TColor32): TColor32;
+function ColorScale_MMX(C: TColor32; W: Cardinal): TColor32;
 {$ENDIF}
 
 implementation
@@ -78,6 +78,9 @@ uses
   GR32_Blend,
   GR32_LowLevel,
   GR32_System;
+
+const
+  BlendRegistryPriorityMMX = -512;
 
 { MMX versions }
 
@@ -174,7 +177,7 @@ asm
 @2:     MOV       [EDX],EAX
 end;
 
-function BlendRegEx_MMX(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function BlendRegEx_MMX(F, B: TColor32; M: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -216,7 +219,7 @@ end;
 
 {$ENDIF}
 
-procedure BlendMemEx_MMX(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendMemEx_MMX(F: TColor32; var B:TColor32; M: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // blend foreground color (F) to a background color (B),
@@ -304,7 +307,7 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegRGB_MMX(F, B, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function BlendRegRGB_MMX(F, B: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      MM2,MM2
@@ -351,7 +354,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemRGB_MMX(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendMemRGB_MMX(F: TColor32; var B: TColor32; W: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      MM2,MM2
@@ -458,7 +461,7 @@ asm
 @4:
 end;
 
-procedure BlendLineEx_MMX(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendLineEx_MMX(Src, Dst: PColor32; Count: Integer; M: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // EAX <- Src
   // EDX <- Dst
@@ -522,7 +525,7 @@ end;
 
 {$ENDIF}
 
-function CombineReg_MMX(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function CombineReg_MMX(X, Y: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -591,7 +594,7 @@ asm
 {$ENDIF}
 end;
 
-procedure CombineMem_MMX(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure CombineMem_MMX(F: TColor32; var B: TColor32; W: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -681,7 +684,7 @@ end;
 
 {$IFDEF TARGET_x86}
 
-procedure CombineLine_MMX(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure CombineLine_MMX(Src, Dst: PColor32; Count: Integer; W: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // EAX <- Src
   // EDX <- Dst
@@ -932,7 +935,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorScale_MMX(C, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function ColorScale_MMX(C: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      MM2,MM2
@@ -963,4 +966,35 @@ asm
 {$ENDIF}
 end;
 
+procedure RegisterBindingFunctions;
+begin
+{$IFNDEF PUREPASCAL}
+{$IFNDEF OMIT_MMX}
+  BlendRegistry.Add(FID_EMMS, @EMMS_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COMBINEREG, @CombineReg_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COMBINELINE, @CombineLine_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDREG, @BlendReg_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDMEM, @BlendMem_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDLINE, @BlendLine_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDLINEEX, @BlendLineEx_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORMAX, @ColorMax_EMMX, [ciEMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORMIN, @ColorMin_EMMX, [ciEMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORADD, @ColorAdd_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORSUB, @ColorSub_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORMODULATE, @ColorModulate_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORDIFFERENCE, @ColorDifference_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLOREXCLUSION, @ColorExclusion_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_COLORSCALE, @ColorScale_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_LIGHTEN, @LightenReg_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDREGRGB, @BlendRegRGB_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+  BlendRegistry.Add(FID_BLENDMEMRGB, @BlendMemRGB_MMX, [ciMMX], 0, BlendRegistryPriorityMMX);
+{$ENDIF}
+{$ENDIF}
+end;
+
+initialization
+  RegisterBindingFunctions;
 end.

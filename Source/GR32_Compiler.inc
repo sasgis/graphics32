@@ -54,12 +54,13 @@
     COMPILERXE6  - Delphi XE6
     COMPILERXE7  - Delphi XE7
     COMPILERXE8  - Delphi XE8
-    COMPILERRX   - Delphi RX
-    COMPILERRX1  - Delphi RX1
+    COMPILERRX   - Delphi RX (10 Seattle)
+    COMPILERRX1  - Delphi RX1 (10.1 Berlin)
     COMPILERRX2  - Delphi RX2 (10.2 Tokyo)
     COMPILERRX3  - Delphi RX3 (10.3 Rio)
     COMPILERRX4  - Delphi RX4 (10.4 Sydney)
-    COMPILERRX5  - Delphi 11
+    COMPILERRX5  - Delphi 11 (Alexandria)
+    COMPILERRX6  - Delphi 12 (Athens)
 
 
   Available Targets:
@@ -75,17 +76,18 @@
 
 {$IFDEF FPC}
   {$DEFINE COMPILERFPC}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
-{$IFDEF VER_LATEST} // adjust for newer version (always use latest version)
-  {$DEFINE COMPILERRX5}
-  {$DEFINE COMPILERRX5_UP}
+{$IFDEF VER360}
+  {$DEFINE COMPILERRX6}
+  {$DEFINE COMPILERRX6_UP}
   {$IFNDEF BCB}
-    {$DEFINE DELPHIRX5}
+    {$DEFINE DELPHIRX6}
   {$ELSE}
-    {$DEFINE BCBRX5}
+    {$DEFINE BCBRX6}
   {$ENDIF}
-  {$UNDEF VER_LATEST}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER350}
@@ -96,6 +98,7 @@
   {$ELSE}
     {$DEFINE BCBRX5}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER340}
@@ -106,6 +109,7 @@
   {$ELSE}
     {$DEFINE BCBRX4}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER330}
@@ -116,6 +120,7 @@
   {$ELSE}
     {$DEFINE BCBRX3}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER320}
@@ -126,6 +131,7 @@
   {$ELSE}
     {$DEFINE BCBRX2}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER310}
@@ -136,6 +142,7 @@
   {$ELSE}
     {$DEFINE BCBRX1}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER300}
@@ -146,6 +153,7 @@
   {$ELSE}
     {$DEFINE BCBRX}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER290}
@@ -156,6 +164,7 @@
   {$ELSE}
     {$DEFINE BCBXE8}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER280}
@@ -166,6 +175,7 @@
   {$ELSE}
     {$DEFINE BCBXE7}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER270}
@@ -176,6 +186,7 @@
   {$ELSE}
     {$DEFINE BCBXE6}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER260}
@@ -186,6 +197,7 @@
   {$ELSE}
     {$DEFINE BCBXE5}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER250}
@@ -196,6 +208,7 @@
   {$ELSE}
     {$DEFINE BCBXE4}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER240}
@@ -206,6 +219,7 @@
   {$ELSE}
     {$DEFINE BCBXE3}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER230}
@@ -216,6 +230,7 @@
   {$ELSE}
     {$DEFINE BCBXE2}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER220}
@@ -226,6 +241,7 @@
   {$ELSE}
     {$DEFINE BCBXE1}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER210}
@@ -236,6 +252,7 @@
   {$ELSE}
     {$DEFINE BCB14}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER200}
@@ -246,6 +263,7 @@
   {$ELSE}
     {$DEFINE BCB12}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER185}
@@ -256,6 +274,7 @@
   {$ELSE}
     {$DEFINE BCB11}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER180}
@@ -266,6 +285,7 @@
   {$ELSE}
     {$DEFINE BCB10}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER170}
@@ -276,6 +296,7 @@
   {$ELSE}
     {$DEFINE BCB8}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER150}
@@ -286,6 +307,7 @@
   {$ELSE}
     {$DEFINE BCB7}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
 {$ENDIF}
 
 {$IFDEF VER140}
@@ -296,6 +318,28 @@
   {$ELSE}
     {$DEFINE BCB6}
   {$ENDIF}
+  {$DEFINE KNOWN_COMPILER}
+{$ENDIF}
+
+{$IFNDEF KNOWN_COMPILER}
+  // Unknown compiler - Assume newer than latest version
+  {$Message Hint 'Unknown compiler version. Assuming compatible with last known version.'}
+
+  // Keep the following updated to match the defines for the last known version.
+  {$DEFINE COMPILERRX5}
+  {$DEFINE COMPILERRX5_UP}
+  {$IFNDEF BCB}
+    {$DEFINE DELPHIRX5}
+  {$ELSE}
+    {$DEFINE BCBRX5}
+  {$ENDIF}
+{$ELSE KNOWN_COMPILER}
+  {$UNDEF KNOWN_COMPILER}
+{$ENDIF KNOWN_COMPILER}
+
+
+{$IFDEF COMPILERRX6_UP}
+  {$DEFINE COMPILERRX5_UP}
 {$ENDIF}
 
 {$IFDEF COMPILERRX5_UP}
@@ -379,10 +423,10 @@
 {$ENDIF}
 
 {$IFDEF COMPILERFPC}
+
   {$MODE Delphi}
   {$DEFINE PLATFORM_INDEPENDENT}
   {$DEFINE FPC_HAS_CONSTREF}
-  {$DEFINE HAS_NATIVEINT}
   {$DEFINE NATIVE_SINCOS}
   {$DEFINE USESTACKALLOC}
   {$IFNDEF WINDOWS}
@@ -395,21 +439,20 @@
   {$ELSE}
     {$DEFINE PUREPASCAL}
   {$IFEND}
+
+{$ENDIF COMPILERFPC}
+
+
+{$IFNDEF COMPILERXE2_UP}
+{$IFNDEF COMPILERFPC}
+  {$Message Fatal 'Graphics32 only supports Delphi/BCB XE2 (or higher) or Free Pascal / Lazarus'}
+{$ENDIF}
 {$ENDIF}
 
 {$IFDEF COMPILERXE2_UP}
   {$IFDEF TARGET_x64}
     {$EXCESSPRECISION OFF}
   {$ENDIF}
-{$ENDIF}
-
-{$IFNDEF COMPILER6_UP}
-{$IFNDEF COMPILERFPC}
-+--------------------------------------------------------------------+
-|  Graphics32 may only be installed with Delphi/BCB 6 (or higher)    |
-|   or Free Pascal / Lazarus                                         |
-+--------------------------------------------------------------------+
-{$ENDIF}
 {$ENDIF}
 
 
@@ -441,6 +484,7 @@
 *)
 
 {$IFDEF COMPILERFPC}
+
   // Set up internal CPU target directives according to FPC directives
   {$IFDEF CPU386}
     {$IFDEF CPUI386}
@@ -473,7 +517,9 @@
     // target is an ARM processor.
     {$DEFINE TARGET_ARM}
   {$ENDIF}
-{$ELSE}
+
+{$ELSE COMPILERFPC}
+
   // check for XE2 64-Bit compiler define
   {$IFDEF CPUX64}
     {$DEFINE TARGET_x64}
@@ -481,21 +527,8 @@
     // define default (delphi etc) target (32 bit Intel 80386 or later)
     {$DEFINE TARGET_x86}
   {$ENDIF}
-{$ENDIF}
 
-
-(*
-  Symbol BITS_GETTER:
-  -------------------
-
-*)
-
-{$IFDEF COMPILERFPC}
-  // Widgetsets other then Windows will want to implement BITS_GETTER
-  {$IFNDEF LCLWin32}
-    {$DEFINE BITS_GETTER}
-  {$ENDIF}
-{$ENDIF}
+{$ENDIF COMPILERFPC}
 
 
 (*
@@ -567,24 +600,6 @@
   {$DEFINE NATIVE_SINCOS}
 {$ENDIF}
 
-
-(*
-  Symbol HAS_NATIVEINT:
-  ---------------------
-
-     With the latest compilers (Delphi XE1+ and FPC 2.6.0+) the type NativeInt
-     is available which has the native size of the OS (32-Bit or 64-Bit). Thus,
-     it can be used to perform pointer arithmetrics.
-
-   NOTE: Please do not use simple Cardinal() or Integer() casts on pointers only
-*)
-
-{$IFDEF COMPILERXE1_UP}
-  {$DEFINE HAS_NATIVEINT}
-{$ENDIF}
-{$IFDEF FPC}
-  {$DEFINE HAS_NATIVEINT}
-{$ENDIF}
 
 
 (*

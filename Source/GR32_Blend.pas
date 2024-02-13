@@ -60,19 +60,19 @@ type
   TBlendReg    = function(F, B: TColor32): TColor32;
   TBlendMem    = procedure(F: TColor32; var B: TColor32);
   TBlendMems   = procedure(F: TColor32; B: PColor32; Count: Integer);
-  TBlendRegEx  = function(F, B, M: TColor32): TColor32;
-  TBlendMemEx  = procedure(F: TColor32; var B: TColor32; M: TColor32);
-  TBlendRegRGB = function(F, B, W: TColor32): TColor32;
-  TBlendMemRGB = procedure(F: TColor32; var B: TColor32; W: TColor32);
+  TBlendRegEx  = function(F, B: TColor32; M: Cardinal): TColor32;
+  TBlendMemEx  = procedure(F: TColor32; var B: TColor32; M: Cardinal);
+  TBlendRegRGB = function(F, B: TColor32; W: Cardinal): TColor32;
+  TBlendMemRGB = procedure(F: TColor32; var B: TColor32; W: Cardinal);
 {$IFDEF TEST_BLENDMEMRGB128SSE4}
   TBlendMemRGB128 = procedure(F: TColor32; var B: TColor32; W: UInt64);
 {$ENDIF}
   TBlendLine   = procedure(Src, Dst: PColor32; Count: Integer);
-  TBlendLineEx = procedure(Src, Dst: PColor32; Count: Integer; M: TColor32);
+  TBlendLineEx = procedure(Src, Dst: PColor32; Count: Integer; M: Cardinal);
   TBlendLine1  = procedure(Src: TColor32; Dst: PColor32; Count: Integer);
-  TCombineReg  = function(X, Y, W: TColor32): TColor32;
-  TCombineMem  = procedure(X: TColor32; var Y: TColor32; W: TColor32);
-  TCombineLine = procedure(Src, Dst: PColor32; Count: Integer; W: TColor32);
+  TCombineReg  = function(X, Y: TColor32; W: Cardinal): TColor32;
+  TCombineMem  = procedure(X: TColor32; var Y: TColor32; W: Cardinal);
+  TCombineLine = procedure(Src, Dst: PColor32; Count: Integer; W: Cardinal);
   TLightenReg  = function(C: TColor32; Amount: Integer): TColor32;
 
 var
@@ -167,8 +167,55 @@ const
   BLEND_LINE: TBlendLineCombineModeArray = ((@@BlendLine),(@@MergeLine));
   BLEND_LINE_EX: TBlendLineExCombineModeArray = ((@@BlendLineEx),(@@MergeLineEx));
 
-var
-  BlendRegistry: TFunctionRegistry;
+function BlendRegistry: TFunctionRegistry;
+
+const
+  FID_EMMS              = 0;
+  FID_MERGEREG          = 1;
+  FID_MERGEMEM          = 2;
+  FID_MERGELINE         = 3;
+  FID_MERGELINE1        = 4;
+  FID_MERGEREGEX        = 5;
+  FID_MERGEMEMEX        = 6;
+  FID_MERGELINEEX       = 7;
+  FID_COMBINEREG        = 8;
+  FID_COMBINEMEM        = 9;
+  FID_COMBINELINE       = 10;
+
+  FID_BLENDREG          = 11;
+  FID_BLENDMEM          = 12;
+  FID_BLENDMEMS         = 13;
+  FID_BLENDLINE         = 14;
+  FID_BLENDREGEX        = 15;
+  FID_BLENDMEMEX        = 16;
+  FID_BLENDLINEEX       = 17;
+  FID_BLENDLINE1        = 18;
+
+  FID_COLORMAX          = 19;
+  FID_COLORMIN          = 20;
+  FID_COLORAVERAGE      = 21;
+  FID_COLORADD          = 22;
+  FID_COLORSUB          = 23;
+  FID_COLORDIV          = 24;
+  FID_COLORMODULATE     = 25;
+  FID_COLORDIFFERENCE   = 26;
+  FID_COLOREXCLUSION    = 27;
+  FID_COLORSCALE        = 28;
+  FID_COLORSCREEN       = 29;
+  FID_COLORDODGE        = 30;
+  FID_COLORBURN         = 31;
+  FID_BLENDCOLORADD     = 32;
+  FID_BLENDCOLORMODULATE= 33;
+  FID_LIGHTEN           = 34;
+
+  FID_BLENDREGRGB       = 35;
+  FID_BLENDMEMRGB       = 36;
+{$IFDEF TEST_BLENDMEMRGB128SSE4}
+  FID_BLENDMEMRGB128    = 37;
+{$ENDIF}
+
+const
+  BlendBindingFlagPascal = $0001;
 
 {$IFDEF OMIT_MMX}
 procedure EMMS; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -272,71 +319,64 @@ begin
   end;
 end;
 
-function BlendRegEx_Pas(F, B, M: TColor32): TColor32;
+function BlendRegEx_Pas(F, B: TColor32; M: Cardinal): TColor32;
 var
   FX: TColor32Entry absolute F;
   BX: TColor32Entry absolute B;
   Af, Ab: PByteArray;
 begin
   Af := @DivTable[M];
-
   M := Af[FX.A];
 
-  if M = 0 then
+  if (M = 0) then
   begin
     Result := B;
     Exit;
   end;
 
-  if M = $FF then
+  if (M = $FF) then
   begin
     Result := F;
     Exit;
   end;
 
+  Af := @DivTable[M];
   Ab := @DivTable[255 - M];
-  with BX do
-  begin
-    R := Af[FX.R] + Ab[R];
-    G := Af[FX.G] + Ab[G];
-    B := Af[FX.B] + Ab[B];
-    A := $FF;
-  end;
-  Result := B;
+
+  TColor32Entry(Result).R := Af[FX.R] + Ab[BX.R];
+  TColor32Entry(Result).G := Af[FX.G] + Ab[BX.G];
+  TColor32Entry(Result).B := Af[FX.B] + Ab[BX.B];
+  TColor32Entry(Result).A := $FF;
 end;
 
-procedure BlendMemEx_Pas(F: TColor32; var B: TColor32; M: TColor32);
+procedure BlendMemEx_Pas(F: TColor32; var B: TColor32; M: Cardinal);
 var
   FX: TColor32Entry absolute F;
   BX: TColor32Entry absolute B;
   Af, Ab: PByteArray;
 begin
   Af := @DivTable[M];
+  M := Af[FX.A]; // M = (M / 255) * (FX.A / 255)
 
-  M := Af[FX.A];
-
-  if M = 0 then
-  begin
+  if (M = 0) then
     Exit;
-  end;
 
-  if M = $FF then
+  if (M = $FF) then
   begin
     B := F;
     Exit;
   end;
 
+  Af := @DivTable[M];
   Ab := @DivTable[255 - M];
-  with BX do
-  begin
-    R := Af[FX.R] + Ab[R];
-    G := Af[FX.G] + Ab[G];
-    B := Af[FX.B] + Ab[B];
-    A := $FF;
-  end;
+
+  BX.R := Af[FX.R] + Ab[BX.R];
+  BX.G := Af[FX.G] + Ab[BX.G];
+  BX.B := Af[FX.B] + Ab[BX.B];
+  BX.A := $FF;
 end;
 
-function BlendRegRGB_Pas(F, B, W: TColor32): TColor32;
+function BlendRegRGB_Pas(F, B: TColor32; W: Cardinal): TColor32;
 var
   FX: TColor32Entry absolute F;
   BX: TColor32Entry absolute B;
@@ -348,7 +388,7 @@ begin
   RX.B := (FX.B - BX.B) * WX.R div 255 + BX.B;
 end;
 
-procedure BlendMemRGB_Pas(F: TColor32; var B: TColor32; W: TColor32);
+procedure BlendMemRGB_Pas(F: TColor32; var B: TColor32; W: Cardinal);
 var
   FX: TColor32Entry absolute F;
   BX: TColor32Entry absolute B;
@@ -380,7 +420,7 @@ begin
   end;
 end;
 
-procedure BlendLineEx_Pas(Src, Dst: PColor32; Count: Integer; M: TColor32);
+procedure BlendLineEx_Pas(Src, Dst: PColor32; Count: Integer; M: Cardinal);
 begin
   while Count > 0 do
   begin
@@ -391,7 +431,7 @@ begin
   end;
 end;
 
-function CombineReg_Pas(X, Y, W: TColor32): TColor32;
+function CombineReg_Pas(X, Y: TColor32; W: Cardinal): TColor32;
 var
   Xe: TColor32Entry absolute X;
   Ye: TColor32Entry absolute Y;
@@ -421,7 +461,7 @@ begin
   Result := X;
 end;
 
-procedure CombineMem_Pas(X: TColor32; var Y: TColor32; W: TColor32);
+procedure CombineMem_Pas(X: TColor32; var Y: TColor32; W: Cardinal);
 var
   Xe: TColor32Entry absolute X;
   Ye: TColor32Entry absolute Y;
@@ -450,7 +490,7 @@ begin
   Y := X;
 end;
 
-procedure CombineLine_Pas(Src, Dst: PColor32; Count: Integer; W: TColor32);
+procedure CombineLine_Pas(Src, Dst: PColor32; Count: Integer; W: Cardinal);
 begin
   while Count > 0 do
   begin
@@ -479,7 +519,7 @@ begin
     Result := F
   else
   begin
-    Rx.A := DivTable[Fa xor 255, Ba xor 255] xor 255;
+    Rx.A := not DivTable[Fa xor 255, Ba xor 255]; // "xor 255" is faster than "not" for the indices because the asm is shorter
     Wa := RcTable[Rx.A, Fa];
     Fw := @DivTable[Wa];
     Bw := @DivTable[Wa xor $FF];
@@ -489,7 +529,7 @@ begin
   end;
 end;
 
-function MergeRegEx_Pas(F, B, M: TColor32): TColor32;
+function MergeRegEx_Pas(F, B: TColor32; M: Cardinal): TColor32;
 begin
   Result := MergeReg(DivTable[M, F shr 24] shl 24 or F and $00FFFFFF, B);
 end;
@@ -499,7 +539,7 @@ begin
   B := MergeReg(F, B);
 end;
 
-procedure MergeMemEx_Pas(F: TColor32; var B: TColor32; M: TColor32);
+procedure MergeMemEx_Pas(F: TColor32; var B: TColor32; M: Cardinal);
 begin
   B := MergeReg(DivTable[M, F shr 24] shl 24 or F and $00FFFFFF, B);
 end;
@@ -525,9 +565,9 @@ begin
   end;
 end;
 
-procedure MergeLineEx_Pas(Src, Dst: PColor32; Count: Integer; M: TColor32);
+procedure MergeLineEx_Pas(Src, Dst: PColor32; Count: Integer; M: Cardinal);
 var
-  PM: PByteArray absolute M;
+  PM: PByteArray;
 begin
   PM := @DivTable[M];
   while Count > 0 do
@@ -743,7 +783,7 @@ begin
   Result := C3 + C1;
 end;
 
-function ColorScale_Pas(C, W: TColor32): TColor32;
+function ColorScale_Pas(C: TColor32; W: Cardinal): TColor32;
 var
   Ce: TColor32Entry absolute C;
 var
@@ -864,15 +904,9 @@ var
   P: PLongWord;
 begin
   GetMem(AlphaTable, 257 * 8 * SizeOf(Cardinal));
-  {$IFDEF HAS_NATIVEINT}
   alpha_ptr := Pointer(NativeUInt(AlphaTable) and (not $F));
   if NativeUInt(alpha_ptr) < NativeUInt(AlphaTable) then
     alpha_ptr := Pointer(NativeUInt(alpha_ptr) + 16);
-  {$ELSE}
-  alpha_ptr := Pointer(Cardinal(AlphaTable) and (not $F));
-  if Cardinal(alpha_ptr) < Cardinal(AlphaTable) then
-    Inc(Cardinal(alpha_ptr), 16);
-  {$ENDIF}
   P := alpha_ptr;
   for I := 0 to 255 do
   begin
@@ -905,73 +939,29 @@ end;
 
 procedure MakeMergeTables;
 var
-  I, J: Integer;
+  i, j: Integer;
 begin
-  for J := 0 to 255 do
+  for i := 0 to 255 do
   begin
-    DivTable[0, J] := 0;
-    RcTable[0, J] := 0;
+    DivTable[0, i] := 0; // Yes, [0,0] is set twice but who cares
+    DivTable[i, 0] := 0;
+    RcTable[0, i] := 0;
+    RcTable[i, 0] := 0;
   end;
-  for J := 0 to 255 do
-    for I := 1 to 255 do
+
+  for j := 1 to 255 do
+    for i := 1 to 255 do
     begin
-      DivTable[I, J] := Round(I * J * COne255th);
-      RcTable[I, J] := Round(J * 255 / I)
+      DivTable[i, j] := Round(i * j * COne255th);
+      if i > j then
+        RcTable[i, j] := Round(j * 255 / i)
+      else
+        RcTable[i, j] := 255;
     end;
 end;
 
-const
-  FID_EMMS = 0;
-  FID_MERGEREG = 1;
-  FID_MERGEMEM = 2;
-  FID_MERGELINE = 3;
-  FID_MERGELINE1 = 4;
-  FID_MERGEREGEX = 5;
-  FID_MERGEMEMEX = 6;
-  FID_MERGELINEEX = 7;
-  FID_COMBINEREG = 8;
-  FID_COMBINEMEM = 9;
-  FID_COMBINELINE = 10;
-
-  FID_BLENDREG = 11;
-  FID_BLENDMEM = 12;
-  FID_BLENDMEMS = 13;
-  FID_BLENDLINE = 14;
-  FID_BLENDREGEX = 15;
-  FID_BLENDMEMEX = 16;
-  FID_BLENDLINEEX = 17;
-  FID_BLENDLINE1 = 18;
-
-  FID_COLORMAX = 19;
-  FID_COLORMIN = 20;
-  FID_COLORAVERAGE = 21;
-  FID_COLORADD = 22;
-  FID_COLORSUB = 23;
-  FID_COLORDIV = 24;
-  FID_COLORMODULATE = 25;
-  FID_COLORDIFFERENCE = 26;
-  FID_COLOREXCLUSION = 27;
-  FID_COLORSCALE = 28;
-  FID_COLORSCREEN = 29;
-  FID_COLORDODGE = 30;
-  FID_COLORBURN = 31;
-  FID_BLENDCOLORADD = 32;
-  FID_BLENDCOLORMODULATE = 33;
-  FID_LIGHTEN = 34;
-
-  FID_BLENDREGRGB = 35;
-  FID_BLENDMEMRGB = 36;
-{$IFDEF TEST_BLENDMEMRGB128SSE4}
-  FID_BLENDMEMRGB128 = 37;
-{$ENDIF}
-
-const
-  BlendBindingFlagPascal = $0001;
-
-
 procedure RegisterBindings;
 begin
-  BlendRegistry := NewRegistry('GR32_Blend bindings');
 {$IFNDEF OMIT_MMX}
   BlendRegistry.RegisterBinding(FID_EMMS, @@EMMS);
 {$ENDIF}
@@ -1017,7 +1007,10 @@ begin
 {$IFDEF TEST_BLENDMEMRGB128SSE4}
   BlendRegistry.RegisterBinding(FID_BLENDMEMRGB128, @@BlendMemRGB128);
 {$ENDIF}
+end;
 
+procedure RegisterBindingFunctions;
+begin
   // pure pascal
   BlendRegistry.Add(FID_EMMS, @EMMS_Pas, [], BlendBindingFlagPascal);
   BlendRegistry.Add(FID_MERGEREG, @MergeReg_Pas, [], BlendBindingFlagPascal);
@@ -1056,81 +1049,27 @@ begin
   BlendRegistry.Add(FID_LIGHTEN, @LightenReg_Pas, [], BlendBindingFlagPascal);
   BlendRegistry.Add(FID_BLENDREGRGB, @BlendRegRGB_Pas, [], BlendBindingFlagPascal);
   BlendRegistry.Add(FID_BLENDMEMRGB, @BlendMemRGB_Pas, [], BlendBindingFlagPascal);
+end;
 
-{$IFNDEF PUREPASCAL}
-  BlendRegistry.Add(FID_EMMS, @EMMS_ASM, []);
-  BlendRegistry.Add(FID_COMBINEREG, @CombineReg_ASM, []);
-  BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_ASM, []);
-  BlendRegistry.Add(FID_BLENDREG, @BlendReg_ASM, []);
-  BlendRegistry.Add(FID_BLENDMEM, @BlendMem_ASM, []);
-  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_ASM, []);
-  BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_ASM, []);
-  BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_ASM, []);
-  BlendRegistry.Add(FID_BLENDLINE, @BlendLine_ASM, []);
-  BlendRegistry.Add(FID_BLENDLINE1, @BlendLine1_ASM, []);
-{$IFNDEF TARGET_x64}
-  BlendRegistry.Add(FID_MERGEREG, @MergeReg_ASM, []);
-{$ENDIF}
-{$IFNDEF OMIT_MMX}
-  BlendRegistry.Add(FID_EMMS, @EMMS_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COMBINEREG, @CombineReg_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COMBINELINE, @CombineLine_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDREG, @BlendReg_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDMEM, @BlendMem_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDLINE, @BlendLine_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDLINEEX, @BlendLineEx_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COLORMAX, @ColorMax_EMMX, [ciEMMX]);
-  BlendRegistry.Add(FID_COLORMIN, @ColorMin_EMMX, [ciEMMX]);
-  BlendRegistry.Add(FID_COLORADD, @ColorAdd_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COLORSUB, @ColorSub_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COLORMODULATE, @ColorModulate_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COLORDIFFERENCE, @ColorDifference_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COLOREXCLUSION, @ColorExclusion_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_COLORSCALE, @ColorScale_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_LIGHTEN, @LightenReg_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDREGRGB, @BlendRegRGB_MMX, [ciMMX]);
-  BlendRegistry.Add(FID_BLENDMEMRGB, @BlendMemRGB_MMX, [ciMMX]);
-{$ENDIF}
-{$IFNDEF OMIT_SSE2}
-  BlendRegistry.Add(FID_EMMS, @EMMS_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_MERGEREG, @MergeReg_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COMBINEREG, @CombineReg_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COMBINELINE, @CombineLine_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDREG, @BlendReg_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDMEM, @BlendMem_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDLINE, @BlendLine_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDLINEEX, @BlendLineEx_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORMAX, @ColorMax_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORMIN, @ColorMin_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORADD, @ColorAdd_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORSUB, @ColorSub_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORMODULATE, @ColorModulate_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORDIFFERENCE, @ColorDifference_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLOREXCLUSION, @ColorExclusion_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_COLORSCALE, @ColorScale_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_LIGHTEN, @LightenReg_SSE2, [ciSSE]);
-  BlendRegistry.Add(FID_BLENDREGRGB, @BlendRegRGB_SSE2, [ciSSE2]);
-  BlendRegistry.Add(FID_BLENDMEMRGB, @BlendMemRGB_SSE2, [ciSSE2]);
-{$IFDEF TEST_BLENDMEMRGB128SSE4}
-  BlendRegistry.Add(FID_BLENDMEMRGB128, @BlendMemRGB128_SSE4, [ciSSE2]);
-{$ENDIF}
-{$ENDIF}
-{$ENDIF}
+var
+  FBlendRegistry: TFunctionRegistry = nil;
 
-  BlendRegistry.RebindAll;
+function BlendRegistry: TFunctionRegistry;
+begin
+  if (FBlendRegistry = nil) then
+  begin
+    FBlendRegistry := NewRegistry('GR32_Blend bindings');
+    RegisterBindings;
+  end;
+  Result := FBlendRegistry;
 end;
 
 initialization
   BlendColorAdd := BlendColorAdd_Pas;
 
-  RegisterBindings;
+  RegisterBindingFunctions;
+  BlendRegistry.RebindAll;
+
   MakeMergeTables;
 
 {$IFNDEF PUREPASCAL}

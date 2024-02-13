@@ -45,18 +45,18 @@ function BlendReg_SSE2(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDI
 procedure BlendMem_SSE2(F: TColor32; var B: TColor32); {$IFDEF FPC} assembler; {$ENDIF}
 procedure BlendMems_SSE2(F: TColor32; B: PColor32; Count: Integer); {$IFDEF FPC} assembler; {$ENDIF}
 
-function BlendRegEx_SSE2(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
-procedure BlendMemEx_SSE2(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} assembler; {$ENDIF}
+function BlendRegEx_SSE2(F, B: TColor32; M: Cardinal): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
+procedure BlendMemEx_SSE2(F: TColor32; var B:TColor32; M: Cardinal); {$IFDEF FPC} assembler; {$ENDIF}
 
-function BlendRegRGB_SSE2(F, B, W: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
-procedure BlendMemRGB_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; {$ENDIF}
+function BlendRegRGB_SSE2(F, B: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
+procedure BlendMemRGB_SSE2(F: TColor32; var B: TColor32; W: Cardinal); {$IFDEF FPC} assembler; {$ENDIF}
 
 procedure BlendLine_SSE2(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} assembler; {$ENDIF}
-procedure BlendLineEx_SSE2(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} assembler; {$ENDIF}
+procedure BlendLineEx_SSE2(Src, Dst: PColor32; Count: Integer; M: Cardinal); {$IFDEF FPC} assembler; {$ENDIF}
 
-function CombineReg_SSE2(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
-procedure CombineMem_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; {$ENDIF}
-procedure CombineLine_SSE2(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} assembler; {$ENDIF}
+function CombineReg_SSE2(X, Y: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
+procedure CombineMem_SSE2(F: TColor32; var B: TColor32; W: Cardinal); {$IFDEF FPC} assembler; {$ENDIF}
+procedure CombineLine_SSE2(Src, Dst: PColor32; Count: Integer; W: Cardinal); {$IFDEF FPC} assembler; {$ENDIF}
 
 function MergeReg_SSE2(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
 
@@ -71,7 +71,7 @@ function ColorMax_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; {$EN
 function ColorMin_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
 function ColorDifference_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
 function ColorExclusion_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
-function ColorScale_SSE2(C, W: TColor32): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
+function ColorScale_SSE2(C: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; {$ENDIF}
 
 implementation
 
@@ -79,6 +79,9 @@ uses
   GR32_Blend,
   GR32_LowLevel,
   GR32_System;
+
+const
+  BlendRegistryPrioritySSE2 = -768;
 
 { SSE2 versions }
 
@@ -320,7 +323,7 @@ asm
 end;
 
 
-function BlendRegEx_SSE2(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function BlendRegEx_SSE2(F, B: TColor32; M: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -404,7 +407,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemEx_SSE2(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendMemEx_SSE2(F: TColor32; var B:TColor32; M: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // blend foreground color (F) to a background color (B),
@@ -493,7 +496,7 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegRGB_SSE2(F, B, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function BlendRegRGB_SSE2(F, B: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      XMM2,XMM2
@@ -540,7 +543,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemRGB_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendMemRGB_SSE2(F: TColor32; var B: TColor32; W: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      XMM2,XMM2
@@ -862,7 +865,7 @@ asm
 end;
 
 
-procedure BlendLineEx_SSE2(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendLineEx_SSE2(Src, Dst: PColor32; Count: Integer; M: Cardinal); {$IFDEF FPC} assembler; {$IFDEF TARGET_X64}nostackframe;{$ENDIF} {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX <- Src
@@ -988,7 +991,7 @@ asm
 {$ENDIF}
 end;
 
-function CombineReg_SSE2(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function CombineReg_SSE2(X, Y: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -1057,7 +1060,7 @@ asm
 {$ENDIF}
 end;
 
-procedure CombineMem_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure CombineMem_SSE2(F: TColor32; var B: TColor32; W: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -1147,7 +1150,7 @@ asm
 end;
 
 
-procedure CombineLine_SSE2(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure CombineLine_SSE2(Src, Dst: PColor32; Count: Integer; W: Cardinal); {$IFDEF FPC} assembler; {$IFDEF TARGET_X64}nostackframe;{$ENDIF} {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX <- Src
@@ -1572,7 +1575,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorScale_SSE2(C, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function ColorScale_SSE2(C: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      XMM2,XMM2
@@ -1603,4 +1606,40 @@ asm
 {$ENDIF}
 end;
 
+procedure RegisterBindingFunctions;
+begin
+{$IFNDEF PUREPASCAL}
+{$IFNDEF OMIT_SSE2}
+  BlendRegistry.Add(FID_EMMS, @EMMS_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_MERGEREG, @MergeReg_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COMBINEREG, @CombineReg_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COMBINELINE, @CombineLine_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDREG, @BlendReg_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDMEM, @BlendMem_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDLINE, @BlendLine_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDLINEEX, @BlendLineEx_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORMAX, @ColorMax_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORMIN, @ColorMin_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORADD, @ColorAdd_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORSUB, @ColorSub_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORMODULATE, @ColorModulate_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORDIFFERENCE, @ColorDifference_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLOREXCLUSION, @ColorExclusion_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_COLORSCALE, @ColorScale_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_LIGHTEN, @LightenReg_SSE2, [ciSSE], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDREGRGB, @BlendRegRGB_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+  BlendRegistry.Add(FID_BLENDMEMRGB, @BlendMemRGB_SSE2, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+{$IFDEF TEST_BLENDMEMRGB128SSE4}
+  BlendRegistry.Add(FID_BLENDMEMRGB128, @BlendMemRGB128_SSE4, [ciSSE2], 0, BlendRegistryPrioritySSE2);
+{$ENDIF}
+{$ENDIF}
+{$ENDIF}
+end;
+
+initialization
+  RegisterBindingFunctions;
 end.

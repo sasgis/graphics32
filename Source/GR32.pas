@@ -43,8 +43,11 @@ interface
 {$I GR32.inc}
 
 uses
-  {$IFDEF FPC} LCLIntf, LCLType, Types, {$ELSE}
-  {$IFDEF COMPILERXE2_UP}UITypes, Types, {$ENDIF} Windows, {$ENDIF}
+{$IFDEF FPC}
+  LCLIntf, LCLType, Types,
+{$ELSE}
+  UITypes, Types, Windows,
+{$ENDIF}
   Controls, Graphics, Classes, SysUtils;
 
 { Version Control }
@@ -91,163 +94,163 @@ type
 
 const
   // Some predefined color constants
-  clBlack32               = TColor32($FF000000);
-  clDimGray32             = TColor32($FF3F3F3F);
-  clGray32                = TColor32($FF7F7F7F);
-  clLightGray32           = TColor32($FFBFBFBF);
-  clWhite32               = TColor32($FFFFFFFF);
-  clMaroon32              = TColor32($FF7F0000);
-  clGreen32               = TColor32($FF007F00);
-  clOlive32               = TColor32($FF7F7F00);
-  clNavy32                = TColor32($FF00007F);
-  clPurple32              = TColor32($FF7F007F);
-  clTeal32                = TColor32($FF007F7F);
-  clRed32                 = TColor32($FFFF0000);
-  clLime32                = TColor32($FF00FF00);
-  clYellow32              = TColor32($FFFFFF00);
-  clBlue32                = TColor32($FF0000FF);
-  clFuchsia32             = TColor32($FFFF00FF);
-  clAqua32                = TColor32($FF00FFFF);
+  clBlack32               = TColor32({$IFNDEF RGBA_FORMAT} $FF000000 {$ELSE} $FF000000 {$ENDIF});
+  clDimGray32             = TColor32({$IFNDEF RGBA_FORMAT} $FF3F3F3F {$ELSE} $FF3F3F3F {$ENDIF});
+  clGray32                = TColor32({$IFNDEF RGBA_FORMAT} $FF7F7F7F {$ELSE} $FF7F7F7F {$ENDIF});
+  clLightGray32           = TColor32({$IFNDEF RGBA_FORMAT} $FFBFBFBF {$ELSE} $FFBFBFBF {$ENDIF});
+  clWhite32               = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFFFF {$ELSE} $FFFFFFFF {$ENDIF});
+  clMaroon32              = TColor32({$IFNDEF RGBA_FORMAT} $FF7F0000 {$ELSE} $FF00007F {$ENDIF});
+  clGreen32               = TColor32({$IFNDEF RGBA_FORMAT} $FF007F00 {$ELSE} $FF007F00 {$ENDIF});
+  clOlive32               = TColor32({$IFNDEF RGBA_FORMAT} $FF7F7F00 {$ELSE} $FF007F7F {$ENDIF});
+  clNavy32                = TColor32({$IFNDEF RGBA_FORMAT} $FF00007F {$ELSE} $FF7F0000 {$ENDIF});
+  clPurple32              = TColor32({$IFNDEF RGBA_FORMAT} $FF7F007F {$ELSE} $FF7F007F {$ENDIF});
+  clTeal32                = TColor32({$IFNDEF RGBA_FORMAT} $FF007F7F {$ELSE} $FF7F7F00 {$ENDIF});
+  clRed32                 = TColor32({$IFNDEF RGBA_FORMAT} $FFFF0000 {$ELSE} $FF0000FF {$ENDIF});
+  clLime32                = TColor32({$IFNDEF RGBA_FORMAT} $FF00FF00 {$ELSE} $FF00FF00 {$ENDIF});
+  clYellow32              = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFF00 {$ELSE} $FF00FFFF {$ENDIF});
+  clBlue32                = TColor32({$IFNDEF RGBA_FORMAT} $FF0000FF {$ELSE} $FFFF0000 {$ENDIF});
+  clFuchsia32             = TColor32({$IFNDEF RGBA_FORMAT} $FFFF00FF {$ELSE} $FFFF00FF {$ENDIF});
+  clAqua32                = TColor32({$IFNDEF RGBA_FORMAT} $FF00FFFF {$ELSE} $FFFFFF00 {$ENDIF});
 
-  clAliceBlue32           = TColor32($FFF0F8FF);
-  clAntiqueWhite32        = TColor32($FFFAEBD7);
-  clAquamarine32          = TColor32($FF7FFFD4);
-  clAzure32               = TColor32($FFF0FFFF);
-  clBeige32               = TColor32($FFF5F5DC);
-  clBisque32              = TColor32($FFFFE4C4);
-  clBlancheDalmond32      = TColor32($FFFFEBCD);
-  clBlueViolet32          = TColor32($FF8A2BE2);
-  clBrown32               = TColor32($FFA52A2A);
-  clBurlyWood32           = TColor32($FFDEB887);
-  clCadetblue32           = TColor32($FF5F9EA0);
-  clChartReuse32          = TColor32($FF7FFF00);
-  clChocolate32           = TColor32($FFD2691E);
-  clCoral32               = TColor32($FFFF7F50);
-  clCornFlowerBlue32      = TColor32($FF6495ED);
-  clCornSilk32            = TColor32($FFFFF8DC);
-  clCrimson32             = TColor32($FFDC143C);
-  clDarkBlue32            = TColor32($FF00008B);
-  clDarkCyan32            = TColor32($FF008B8B);
-  clDarkGoldenRod32       = TColor32($FFB8860B);
-  clDarkGray32            = TColor32($FFA9A9A9);
-  clDarkGreen32           = TColor32($FF006400);
-  clDarkGrey32            = TColor32($FFA9A9A9);
-  clDarkKhaki32           = TColor32($FFBDB76B);
-  clDarkMagenta32         = TColor32($FF8B008B);
-  clDarkOliveGreen32      = TColor32($FF556B2F);
-  clDarkOrange32          = TColor32($FFFF8C00);
-  clDarkOrchid32          = TColor32($FF9932CC);
-  clDarkRed32             = TColor32($FF8B0000);
-  clDarkSalmon32          = TColor32($FFE9967A);
-  clDarkSeaGreen32        = TColor32($FF8FBC8F);
-  clDarkSlateBlue32       = TColor32($FF483D8B);
-  clDarkSlateGray32       = TColor32($FF2F4F4F);
-  clDarkSlateGrey32       = TColor32($FF2F4F4F);
-  clDarkTurquoise32       = TColor32($FF00CED1);
-  clDarkViolet32          = TColor32($FF9400D3);
-  clDeepPink32            = TColor32($FFFF1493);
-  clDeepSkyBlue32         = TColor32($FF00BFFF);
-  clDodgerBlue32          = TColor32($FF1E90FF);
-  clFireBrick32           = TColor32($FFB22222);
-  clFloralWhite32         = TColor32($FFFFFAF0);
-  clGainsBoro32           = TColor32($FFDCDCDC);
-  clGhostWhite32          = TColor32($FFF8F8FF);
-  clGold32                = TColor32($FFFFD700);
-  clGoldenRod32           = TColor32($FFDAA520);
-  clGreenYellow32         = TColor32($FFADFF2F);
-  clGrey32                = TColor32($FF808080);
-  clHoneyDew32            = TColor32($FFF0FFF0);
-  clHotPink32             = TColor32($FFFF69B4);
-  clIndianRed32           = TColor32($FFCD5C5C);
-  clIndigo32              = TColor32($FF4B0082);
-  clIvory32               = TColor32($FFFFFFF0);
-  clKhaki32               = TColor32($FFF0E68C);
-  clLavender32            = TColor32($FFE6E6FA);
-  clLavenderBlush32       = TColor32($FFFFF0F5);
-  clLawnGreen32           = TColor32($FF7CFC00);
-  clLemonChiffon32        = TColor32($FFFFFACD);
-  clLightBlue32           = TColor32($FFADD8E6);
-  clLightCoral32          = TColor32($FFF08080);
-  clLightCyan32           = TColor32($FFE0FFFF);
-  clLightGoldenRodYellow32= TColor32($FFFAFAD2);
-  clLightGreen32          = TColor32($FF90EE90);
-  clLightGrey32           = TColor32($FFD3D3D3);
-  clLightPink32           = TColor32($FFFFB6C1);
-  clLightSalmon32         = TColor32($FFFFA07A);
-  clLightSeagreen32       = TColor32($FF20B2AA);
-  clLightSkyblue32        = TColor32($FF87CEFA);
-  clLightSlategray32      = TColor32($FF778899);
-  clLightSlategrey32      = TColor32($FF778899);
-  clLightSteelblue32      = TColor32($FFB0C4DE);
-  clLightYellow32         = TColor32($FFFFFFE0);
-  clLtGray32              = TColor32($FFC0C0C0);
-  clMedGray32             = TColor32($FFA0A0A4);
-  clDkGray32              = TColor32($FF808080);
-  clMoneyGreen32          = TColor32($FFC0DCC0);
-  clLegacySkyBlue32       = TColor32($FFA6CAF0);
-  clCream32               = TColor32($FFFFFBF0);
-  clLimeGreen32           = TColor32($FF32CD32);
-  clLinen32               = TColor32($FFFAF0E6);
-  clMediumAquamarine32    = TColor32($FF66CDAA);
-  clMediumBlue32          = TColor32($FF0000CD);
-  clMediumOrchid32        = TColor32($FFBA55D3);
-  clMediumPurple32        = TColor32($FF9370DB);
-  clMediumSeaGreen32      = TColor32($FF3CB371);
-  clMediumSlateBlue32     = TColor32($FF7B68EE);
-  clMediumSpringGreen32   = TColor32($FF00FA9A);
-  clMediumTurquoise32     = TColor32($FF48D1CC);
-  clMediumVioletRed32     = TColor32($FFC71585);
-  clMidnightBlue32        = TColor32($FF191970);
-  clMintCream32           = TColor32($FFF5FFFA);
-  clMistyRose32           = TColor32($FFFFE4E1);
-  clMoccasin32            = TColor32($FFFFE4B5);
-  clNavajoWhite32         = TColor32($FFFFDEAD);
-  clOldLace32             = TColor32($FFFDF5E6);
-  clOliveDrab32           = TColor32($FF6B8E23);
-  clOrange32              = TColor32($FFFFA500);
-  clOrangeRed32           = TColor32($FFFF4500);
-  clOrchid32              = TColor32($FFDA70D6);
-  clPaleGoldenRod32       = TColor32($FFEEE8AA);
-  clPaleGreen32           = TColor32($FF98FB98);
-  clPaleTurquoise32       = TColor32($FFAFEEEE);
-  clPaleVioletred32       = TColor32($FFDB7093);
-  clPapayaWhip32          = TColor32($FFFFEFD5);
-  clPeachPuff32           = TColor32($FFFFDAB9);
-  clPeru32                = TColor32($FFCD853F);
-  clPlum32                = TColor32($FFDDA0DD);
-  clPowderBlue32          = TColor32($FFB0E0E6);
-  clRosyBrown32           = TColor32($FFBC8F8F);
-  clRoyalBlue32           = TColor32($FF4169E1);
-  clSaddleBrown32         = TColor32($FF8B4513);
-  clSalmon32              = TColor32($FFFA8072);
-  clSandyBrown32          = TColor32($FFF4A460);
-  clSeaGreen32            = TColor32($FF2E8B57);
-  clSeaShell32            = TColor32($FFFFF5EE);
-  clSienna32              = TColor32($FFA0522D);
-  clSilver32              = TColor32($FFC0C0C0);
-  clSkyblue32             = TColor32($FF87CEEB);
-  clSlateBlue32           = TColor32($FF6A5ACD);
-  clSlateGray32           = TColor32($FF708090);
-  clSlateGrey32           = TColor32($FF708090);
-  clSnow32                = TColor32($FFFFFAFA);
-  clSpringgreen32         = TColor32($FF00FF7F);
-  clSteelblue32           = TColor32($FF4682B4);
-  clTan32                 = TColor32($FFD2B48C);
-  clThistle32             = TColor32($FFD8BFD8);
-  clTomato32              = TColor32($FFFF6347);
-  clTurquoise32           = TColor32($FF40E0D0);
-  clViolet32              = TColor32($FFEE82EE);
-  clWheat32               = TColor32($FFF5DEB3);
-  clWhitesmoke32          = TColor32($FFF5F5F5);
-  clYellowgreen32         = TColor32($FF9ACD32);
+  clAliceBlue32           = TColor32({$IFNDEF RGBA_FORMAT} $FFF0F8FF {$ELSE} $FFFFF8F0 {$ENDIF});
+  clAntiqueWhite32        = TColor32({$IFNDEF RGBA_FORMAT} $FFFAEBD7 {$ELSE} $FFD7EBFA {$ENDIF});
+  clAquamarine32          = TColor32({$IFNDEF RGBA_FORMAT} $FF7FFFD4 {$ELSE} $FFD4FF7F {$ENDIF});
+  clAzure32               = TColor32({$IFNDEF RGBA_FORMAT} $FFF0FFFF {$ELSE} $FFFFFFF0 {$ENDIF});
+  clBeige32               = TColor32({$IFNDEF RGBA_FORMAT} $FFF5F5DC {$ELSE} $FFDCF5F5 {$ENDIF});
+  clBisque32              = TColor32({$IFNDEF RGBA_FORMAT} $FFFFE4C4 {$ELSE} $FFC4E4FF {$ENDIF});
+  clBlancheDalmond32      = TColor32({$IFNDEF RGBA_FORMAT} $FFFFEBCD {$ELSE} $FFCDEBFF {$ENDIF});
+  clBlueViolet32          = TColor32({$IFNDEF RGBA_FORMAT} $FF8A2BE2 {$ELSE} $FFE22B8A {$ENDIF});
+  clBrown32               = TColor32({$IFNDEF RGBA_FORMAT} $FFA52A2A {$ELSE} $FF2A2AA5 {$ENDIF});
+  clBurlyWood32           = TColor32({$IFNDEF RGBA_FORMAT} $FFDEB887 {$ELSE} $FF87B8DE {$ENDIF});
+  clCadetblue32           = TColor32({$IFNDEF RGBA_FORMAT} $FF5F9EA0 {$ELSE} $FFA09E5F {$ENDIF});
+  clChartReuse32          = TColor32({$IFNDEF RGBA_FORMAT} $FF7FFF00 {$ELSE} $FF00FF7F {$ENDIF});
+  clChocolate32           = TColor32({$IFNDEF RGBA_FORMAT} $FFD2691E {$ELSE} $FF1E69D2 {$ENDIF});
+  clCoral32               = TColor32({$IFNDEF RGBA_FORMAT} $FFFF7F50 {$ELSE} $FF507FFF {$ENDIF});
+  clCornFlowerBlue32      = TColor32({$IFNDEF RGBA_FORMAT} $FF6495ED {$ELSE} $FFED9564 {$ENDIF});
+  clCornSilk32            = TColor32({$IFNDEF RGBA_FORMAT} $FFFFF8DC {$ELSE} $FFDCF8FF {$ENDIF});
+  clCrimson32             = TColor32({$IFNDEF RGBA_FORMAT} $FFDC143C {$ELSE} $FF3C14DC {$ENDIF});
+  clDarkBlue32            = TColor32({$IFNDEF RGBA_FORMAT} $FF00008B {$ELSE} $FF8B0000 {$ENDIF});
+  clDarkCyan32            = TColor32({$IFNDEF RGBA_FORMAT} $FF008B8B {$ELSE} $FF8B8B00 {$ENDIF});
+  clDarkGoldenRod32       = TColor32({$IFNDEF RGBA_FORMAT} $FFB8860B {$ELSE} $FF0B86B8 {$ENDIF});
+  clDarkGray32            = TColor32({$IFNDEF RGBA_FORMAT} $FFA9A9A9 {$ELSE} $FFA9A9A9 {$ENDIF});
+  clDarkGreen32           = TColor32({$IFNDEF RGBA_FORMAT} $FF006400 {$ELSE} $FF006400 {$ENDIF});
+  clDarkGrey32            = TColor32({$IFNDEF RGBA_FORMAT} $FFA9A9A9 {$ELSE} $FFA9A9A9 {$ENDIF});
+  clDarkKhaki32           = TColor32({$IFNDEF RGBA_FORMAT} $FFBDB76B {$ELSE} $FF6BB7BD {$ENDIF});
+  clDarkMagenta32         = TColor32({$IFNDEF RGBA_FORMAT} $FF8B008B {$ELSE} $FF8B008B {$ENDIF});
+  clDarkOliveGreen32      = TColor32({$IFNDEF RGBA_FORMAT} $FF556B2F {$ELSE} $FF2F6B55 {$ENDIF});
+  clDarkOrange32          = TColor32({$IFNDEF RGBA_FORMAT} $FFFF8C00 {$ELSE} $FF008CFF {$ENDIF});
+  clDarkOrchid32          = TColor32({$IFNDEF RGBA_FORMAT} $FF9932CC {$ELSE} $FFCC3299 {$ENDIF});
+  clDarkRed32             = TColor32({$IFNDEF RGBA_FORMAT} $FF8B0000 {$ELSE} $FF00008B {$ENDIF});
+  clDarkSalmon32          = TColor32({$IFNDEF RGBA_FORMAT} $FFE9967A {$ELSE} $FF7A96E9 {$ENDIF});
+  clDarkSeaGreen32        = TColor32({$IFNDEF RGBA_FORMAT} $FF8FBC8F {$ELSE} $FF8FBC8F {$ENDIF});
+  clDarkSlateBlue32       = TColor32({$IFNDEF RGBA_FORMAT} $FF483D8B {$ELSE} $FF8B3D48 {$ENDIF});
+  clDarkSlateGray32       = TColor32({$IFNDEF RGBA_FORMAT} $FF2F4F4F {$ELSE} $FF4F4F2F {$ENDIF});
+  clDarkSlateGrey32       = TColor32({$IFNDEF RGBA_FORMAT} $FF2F4F4F {$ELSE} $FF4F4F2F {$ENDIF});
+  clDarkTurquoise32       = TColor32({$IFNDEF RGBA_FORMAT} $FF00CED1 {$ELSE} $FFD1CE00 {$ENDIF});
+  clDarkViolet32          = TColor32({$IFNDEF RGBA_FORMAT} $FF9400D3 {$ELSE} $FFD30094 {$ENDIF});
+  clDeepPink32            = TColor32({$IFNDEF RGBA_FORMAT} $FFFF1493 {$ELSE} $FF9314FF {$ENDIF});
+  clDeepSkyBlue32         = TColor32({$IFNDEF RGBA_FORMAT} $FF00BFFF {$ELSE} $FFFFBF00 {$ENDIF});
+  clDodgerBlue32          = TColor32({$IFNDEF RGBA_FORMAT} $FF1E90FF {$ELSE} $FFFF901E {$ENDIF});
+  clFireBrick32           = TColor32({$IFNDEF RGBA_FORMAT} $FFB22222 {$ELSE} $FF2222B2 {$ENDIF});
+  clFloralWhite32         = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFAF0 {$ELSE} $FFF0FAFF {$ENDIF});
+  clGainsBoro32           = TColor32({$IFNDEF RGBA_FORMAT} $FFDCDCDC {$ELSE} $FFDCDCDC {$ENDIF});
+  clGhostWhite32          = TColor32({$IFNDEF RGBA_FORMAT} $FFF8F8FF {$ELSE} $FFFFF8F8 {$ENDIF});
+  clGold32                = TColor32({$IFNDEF RGBA_FORMAT} $FFFFD700 {$ELSE} $FF00D7FF {$ENDIF});
+  clGoldenRod32           = TColor32({$IFNDEF RGBA_FORMAT} $FFDAA520 {$ELSE} $FF20A5DA {$ENDIF});
+  clGreenYellow32         = TColor32({$IFNDEF RGBA_FORMAT} $FFADFF2F {$ELSE} $FF2FFFAD {$ENDIF});
+  clGrey32                = TColor32({$IFNDEF RGBA_FORMAT} $FF808080 {$ELSE} $FF808080 {$ENDIF});
+  clHoneyDew32            = TColor32({$IFNDEF RGBA_FORMAT} $FFF0FFF0 {$ELSE} $FFF0FFF0 {$ENDIF});
+  clHotPink32             = TColor32({$IFNDEF RGBA_FORMAT} $FFFF69B4 {$ELSE} $FFB469FF {$ENDIF});
+  clIndianRed32           = TColor32({$IFNDEF RGBA_FORMAT} $FFCD5C5C {$ELSE} $FF5C5CCD {$ENDIF});
+  clIndigo32              = TColor32({$IFNDEF RGBA_FORMAT} $FF4B0082 {$ELSE} $FF82004B {$ENDIF});
+  clIvory32               = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFFF0 {$ELSE} $FFF0FFFF {$ENDIF});
+  clKhaki32               = TColor32({$IFNDEF RGBA_FORMAT} $FFF0E68C {$ELSE} $FF8CE6F0 {$ENDIF});
+  clLavender32            = TColor32({$IFNDEF RGBA_FORMAT} $FFE6E6FA {$ELSE} $FFFAE6E6 {$ENDIF});
+  clLavenderBlush32       = TColor32({$IFNDEF RGBA_FORMAT} $FFFFF0F5 {$ELSE} $FFF5F0FF {$ENDIF});
+  clLawnGreen32           = TColor32({$IFNDEF RGBA_FORMAT} $FF7CFC00 {$ELSE} $FF00FC7C {$ENDIF});
+  clLemonChiffon32        = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFACD {$ELSE} $FFCDFAFF {$ENDIF});
+  clLightBlue32           = TColor32({$IFNDEF RGBA_FORMAT} $FFADD8E6 {$ELSE} $FFE6D8AD {$ENDIF});
+  clLightCoral32          = TColor32({$IFNDEF RGBA_FORMAT} $FFF08080 {$ELSE} $FF8080F0 {$ENDIF});
+  clLightCyan32           = TColor32({$IFNDEF RGBA_FORMAT} $FFE0FFFF {$ELSE} $FFFFFFE0 {$ENDIF});
+  clLightGoldenRodYellow32= TColor32({$IFNDEF RGBA_FORMAT} $FFFAFAD2 {$ELSE} $FFD2FAFA {$ENDIF});
+  clLightGreen32          = TColor32({$IFNDEF RGBA_FORMAT} $FF90EE90 {$ELSE} $FF90EE90 {$ENDIF});
+  clLightGrey32           = TColor32({$IFNDEF RGBA_FORMAT} $FFD3D3D3 {$ELSE} $FFD3D3D3 {$ENDIF});
+  clLightPink32           = TColor32({$IFNDEF RGBA_FORMAT} $FFFFB6C1 {$ELSE} $FFC1B6FF {$ENDIF});
+  clLightSalmon32         = TColor32({$IFNDEF RGBA_FORMAT} $FFFFA07A {$ELSE} $FF7AA0FF {$ENDIF});
+  clLightSeagreen32       = TColor32({$IFNDEF RGBA_FORMAT} $FF20B2AA {$ELSE} $FFAAB220 {$ENDIF});
+  clLightSkyblue32        = TColor32({$IFNDEF RGBA_FORMAT} $FF87CEFA {$ELSE} $FFFACE87 {$ENDIF});
+  clLightSlategray32      = TColor32({$IFNDEF RGBA_FORMAT} $FF778899 {$ELSE} $FF998877 {$ENDIF});
+  clLightSlategrey32      = TColor32({$IFNDEF RGBA_FORMAT} $FF778899 {$ELSE} $FF998877 {$ENDIF});
+  clLightSteelblue32      = TColor32({$IFNDEF RGBA_FORMAT} $FFB0C4DE {$ELSE} $FFDEC4B0 {$ENDIF});
+  clLightYellow32         = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFFE0 {$ELSE} $FFE0FFFF {$ENDIF});
+  clLtGray32              = TColor32({$IFNDEF RGBA_FORMAT} $FFC0C0C0 {$ELSE} $FFC0C0C0 {$ENDIF});
+  clMedGray32             = TColor32({$IFNDEF RGBA_FORMAT} $FFA0A0A4 {$ELSE} $FFA4A0A0 {$ENDIF});
+  clDkGray32              = TColor32({$IFNDEF RGBA_FORMAT} $FF808080 {$ELSE} $FF808080 {$ENDIF});
+  clMoneyGreen32          = TColor32({$IFNDEF RGBA_FORMAT} $FFC0DCC0 {$ELSE} $FFC0DCC0 {$ENDIF});
+  clLegacySkyBlue32       = TColor32({$IFNDEF RGBA_FORMAT} $FFA6CAF0 {$ELSE} $FFF0CAA6 {$ENDIF});
+  clCream32               = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFBF0 {$ELSE} $FFF0FBFF {$ENDIF});
+  clLimeGreen32           = TColor32({$IFNDEF RGBA_FORMAT} $FF32CD32 {$ELSE} $FF32CD32 {$ENDIF});
+  clLinen32               = TColor32({$IFNDEF RGBA_FORMAT} $FFFAF0E6 {$ELSE} $FFE6F0FA {$ENDIF});
+  clMediumAquamarine32    = TColor32({$IFNDEF RGBA_FORMAT} $FF66CDAA {$ELSE} $FFAACD66 {$ENDIF});
+  clMediumBlue32          = TColor32({$IFNDEF RGBA_FORMAT} $FF0000CD {$ELSE} $FFCD0000 {$ENDIF});
+  clMediumOrchid32        = TColor32({$IFNDEF RGBA_FORMAT} $FFBA55D3 {$ELSE} $FFD355BA {$ENDIF});
+  clMediumPurple32        = TColor32({$IFNDEF RGBA_FORMAT} $FF9370DB {$ELSE} $FFDB7093 {$ENDIF});
+  clMediumSeaGreen32      = TColor32({$IFNDEF RGBA_FORMAT} $FF3CB371 {$ELSE} $FF71B33C {$ENDIF});
+  clMediumSlateBlue32     = TColor32({$IFNDEF RGBA_FORMAT} $FF7B68EE {$ELSE} $FFEE687B {$ENDIF});
+  clMediumSpringGreen32   = TColor32({$IFNDEF RGBA_FORMAT} $FF00FA9A {$ELSE} $FF9AFA00 {$ENDIF});
+  clMediumTurquoise32     = TColor32({$IFNDEF RGBA_FORMAT} $FF48D1CC {$ELSE} $FFCCD148 {$ENDIF});
+  clMediumVioletRed32     = TColor32({$IFNDEF RGBA_FORMAT} $FFC71585 {$ELSE} $FF8515C7 {$ENDIF});
+  clMidnightBlue32        = TColor32({$IFNDEF RGBA_FORMAT} $FF191970 {$ELSE} $FF701919 {$ENDIF});
+  clMintCream32           = TColor32({$IFNDEF RGBA_FORMAT} $FFF5FFFA {$ELSE} $FFFAFFF5 {$ENDIF});
+  clMistyRose32           = TColor32({$IFNDEF RGBA_FORMAT} $FFFFE4E1 {$ELSE} $FFE1E4FF {$ENDIF});
+  clMoccasin32            = TColor32({$IFNDEF RGBA_FORMAT} $FFFFE4B5 {$ELSE} $FFB5E4FF {$ENDIF});
+  clNavajoWhite32         = TColor32({$IFNDEF RGBA_FORMAT} $FFFFDEAD {$ELSE} $FFADDEFF {$ENDIF});
+  clOldLace32             = TColor32({$IFNDEF RGBA_FORMAT} $FFFDF5E6 {$ELSE} $FFE6F5FD {$ENDIF});
+  clOliveDrab32           = TColor32({$IFNDEF RGBA_FORMAT} $FF6B8E23 {$ELSE} $FF238E6B {$ENDIF});
+  clOrange32              = TColor32({$IFNDEF RGBA_FORMAT} $FFFFA500 {$ELSE} $FF00A5FF {$ENDIF});
+  clOrangeRed32           = TColor32({$IFNDEF RGBA_FORMAT} $FFFF4500 {$ELSE} $FF0045FF {$ENDIF});
+  clOrchid32              = TColor32({$IFNDEF RGBA_FORMAT} $FFDA70D6 {$ELSE} $FFD670DA {$ENDIF});
+  clPaleGoldenRod32       = TColor32({$IFNDEF RGBA_FORMAT} $FFEEE8AA {$ELSE} $FFAAE8EE {$ENDIF});
+  clPaleGreen32           = TColor32({$IFNDEF RGBA_FORMAT} $FF98FB98 {$ELSE} $FF98FB98 {$ENDIF});
+  clPaleTurquoise32       = TColor32({$IFNDEF RGBA_FORMAT} $FFAFEEEE {$ELSE} $FFEEEEAF {$ENDIF});
+  clPaleVioletred32       = TColor32({$IFNDEF RGBA_FORMAT} $FFDB7093 {$ELSE} $FF9370DB {$ENDIF});
+  clPapayaWhip32          = TColor32({$IFNDEF RGBA_FORMAT} $FFFFEFD5 {$ELSE} $FFD5EFFF {$ENDIF});
+  clPeachPuff32           = TColor32({$IFNDEF RGBA_FORMAT} $FFFFDAB9 {$ELSE} $FFB9DAFF {$ENDIF});
+  clPeru32                = TColor32({$IFNDEF RGBA_FORMAT} $FFCD853F {$ELSE} $FF3F85CD {$ENDIF});
+  clPlum32                = TColor32({$IFNDEF RGBA_FORMAT} $FFDDA0DD {$ELSE} $FFDDA0DD {$ENDIF});
+  clPowderBlue32          = TColor32({$IFNDEF RGBA_FORMAT} $FFB0E0E6 {$ELSE} $FFE6E0B0 {$ENDIF});
+  clRosyBrown32           = TColor32({$IFNDEF RGBA_FORMAT} $FFBC8F8F {$ELSE} $FF8F8FBC {$ENDIF});
+  clRoyalBlue32           = TColor32({$IFNDEF RGBA_FORMAT} $FF4169E1 {$ELSE} $FFE16941 {$ENDIF});
+  clSaddleBrown32         = TColor32({$IFNDEF RGBA_FORMAT} $FF8B4513 {$ELSE} $FF13458B {$ENDIF});
+  clSalmon32              = TColor32({$IFNDEF RGBA_FORMAT} $FFFA8072 {$ELSE} $FF7280FA {$ENDIF});
+  clSandyBrown32          = TColor32({$IFNDEF RGBA_FORMAT} $FFF4A460 {$ELSE} $FF60A4F4 {$ENDIF});
+  clSeaGreen32            = TColor32({$IFNDEF RGBA_FORMAT} $FF2E8B57 {$ELSE} $FF578B2E {$ENDIF});
+  clSeaShell32            = TColor32({$IFNDEF RGBA_FORMAT} $FFFFF5EE {$ELSE} $FFEEF5FF {$ENDIF});
+  clSienna32              = TColor32({$IFNDEF RGBA_FORMAT} $FFA0522D {$ELSE} $FF2D52A0 {$ENDIF});
+  clSilver32              = TColor32({$IFNDEF RGBA_FORMAT} $FFC0C0C0 {$ELSE} $FFC0C0C0 {$ENDIF});
+  clSkyblue32             = TColor32({$IFNDEF RGBA_FORMAT} $FF87CEEB {$ELSE} $FFEBCE87 {$ENDIF});
+  clSlateBlue32           = TColor32({$IFNDEF RGBA_FORMAT} $FF6A5ACD {$ELSE} $FFCD5A6A {$ENDIF});
+  clSlateGray32           = TColor32({$IFNDEF RGBA_FORMAT} $FF708090 {$ELSE} $FF908070 {$ENDIF});
+  clSlateGrey32           = TColor32({$IFNDEF RGBA_FORMAT} $FF708090 {$ELSE} $FF908070 {$ENDIF});
+  clSnow32                = TColor32({$IFNDEF RGBA_FORMAT} $FFFFFAFA {$ELSE} $FFFAFAFF {$ENDIF});
+  clSpringgreen32         = TColor32({$IFNDEF RGBA_FORMAT} $FF00FF7F {$ELSE} $FF7FFF00 {$ENDIF});
+  clSteelblue32           = TColor32({$IFNDEF RGBA_FORMAT} $FF4682B4 {$ELSE} $FFB48246 {$ENDIF});
+  clTan32                 = TColor32({$IFNDEF RGBA_FORMAT} $FFD2B48C {$ELSE} $FF8CB4D2 {$ENDIF});
+  clThistle32             = TColor32({$IFNDEF RGBA_FORMAT} $FFD8BFD8 {$ELSE} $FFD8BFD8 {$ENDIF});
+  clTomato32              = TColor32({$IFNDEF RGBA_FORMAT} $FFFF6347 {$ELSE} $FF4763FF {$ENDIF});
+  clTurquoise32           = TColor32({$IFNDEF RGBA_FORMAT} $FF40E0D0 {$ELSE} $FFD0E040 {$ENDIF});
+  clViolet32              = TColor32({$IFNDEF RGBA_FORMAT} $FFEE82EE {$ELSE} $FFEE82EE {$ENDIF});
+  clWheat32               = TColor32({$IFNDEF RGBA_FORMAT} $FFF5DEB3 {$ELSE} $FFB3DEF5 {$ENDIF});
+  clWhitesmoke32          = TColor32({$IFNDEF RGBA_FORMAT} $FFF5F5F5 {$ELSE} $FFF5F5F5 {$ENDIF});
+  clYellowgreen32         = TColor32({$IFNDEF RGBA_FORMAT} $FF9ACD32 {$ELSE} $FF32CD9A {$ENDIF});
 
   // Some semi-transparent color constants
-  clTrWhite32             = TColor32($7FFFFFFF);
-  clTrGray32              = TColor32($7F7F7F7F);
-  clTrBlack32             = TColor32($7F000000);
-  clTrRed32               = TColor32($7FFF0000);
-  clTrGreen32             = TColor32($7F00FF00);
-  clTrBlue32              = TColor32($7F0000FF);
+  clTrWhite32             = TColor32({$IFNDEF RGBA_FORMAT} $7FFFFFFF {$ELSE} $7FFFFFFF {$ENDIF});
+  clTrGray32              = TColor32({$IFNDEF RGBA_FORMAT} $7F7F7F7F {$ELSE} $7F7F7F7F {$ENDIF});
+  clTrBlack32             = TColor32({$IFNDEF RGBA_FORMAT} $7F000000 {$ELSE} $7F000000 {$ENDIF});
+  clTrRed32               = TColor32({$IFNDEF RGBA_FORMAT} $7FFF0000 {$ELSE} $7F0000FF {$ENDIF});
+  clTrGreen32             = TColor32({$IFNDEF RGBA_FORMAT} $7F00FF00 {$ELSE} $7F00FF00 {$ENDIF});
+  clTrBlue32              = TColor32({$IFNDEF RGBA_FORMAT} $7F0000FF {$ELSE} $7FFF0000 {$ENDIF});
 
 // Color construction and conversion functions
 function Color32(WinColor: TColor): TColor32; overload;
@@ -255,11 +258,26 @@ function Color32(R, G, B: Byte; A: Byte = $FF): TColor32; overload;
 function Color32(Index: Byte; var Palette: TPalette32): TColor32; overload;
 function Gray32(Intensity: Byte; Alpha: Byte = $FF): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
 function WinColor(Color32: TColor32): TColor;
-function ArrayOfColor32(Colors: array of TColor32): TArrayOfColor32;
+function ArrayOfColor32(const Colors: array of TColor32): TArrayOfColor32;
+
+// Unconditionally swap R & B channel, leave rest alone
+function SwapRedBlue(Color32: TColor32): TColor32;
+procedure SwapRedBlueMem(var Color32: TColor32);
+
+// Conditional swaps. Depends on RGBA_FORMAT define.
+function Color32ToBGRA(Color32: TColor32): DWORD; {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure Color32ToBGRAMem(var Color32: TColor32); {$IFDEF USEINLINING} inline; {$ENDIF}
+function Color32ToRGBA(Color32: TColor32): DWORD; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure Color32ToRGBAMem(var Color32: TColor32); {$IFDEF USEINLINING} inline; {$ENDIF}
+
+function BGRAToColor32(BGRA: DWORD): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure BGRAToColor32Mem(var BGRA: DWORD); {$IFDEF USEINLINING} inline; {$ENDIF}
+function RGBAToColor32(RGBA: DWORD): TColor32; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure RGBAToColor32mem(var RGBA: DWORD); {$IFDEF USEINLINING} inline; {$ENDIF}
 
 // Color component access
 procedure Color32ToRGB(Color32: TColor32; var R, G, B: Byte);
-procedure Color32ToRGBA(Color32: TColor32; var R, G, B, A: Byte);
+procedure Color32ToRGBA(Color32: TColor32; var R, G, B, A: Byte); overload;
 function Color32Components(R, G, B, A: Boolean): TColor32Components;
 function RedComponent(Color32: TColor32): Integer; {$IFDEF USEINLINING} inline; {$ENDIF}
 function GreenComponent(Color32: TColor32): Integer; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -281,7 +299,9 @@ procedure RGBToHSV(Color: TColor32; out H, S, V: Single);
 
 {$IFNDEF PLATFORM_INDEPENDENT}
 // Palette conversion functions
+{$IFNDEF RGBA_FORMAT}
 function WinPalette(const P: TPalette32): HPALETTE;
+{$ENDIF RGBA_FORMAT}
 {$ENDIF}
 
 { A fixed-point type }
@@ -539,18 +559,12 @@ type
   TWrapProc = function(Value, Max: Integer): Integer;
   TWrapProcEx = function(Value, Min, Max: Integer): Integer;
 
-{$IFDEF DEPRECATEDMODE}
-{ Stretch filters }
-  TStretchFilter = (sfNearest, sfDraft, sfLinear, sfCosine, sfSpline,
-    sfLanczos, sfMitchell);
-{$ENDIF}
-
 type
   { TPlainInterfacedPersistent }
   { TPlainInterfacedPersistent provides simple interface support with
     optional reference-counting operation. }
   TPlainInterfacedPersistent = class(TPersistent, IInterface)
-  private
+  strict private
     FRefCounted: Boolean;
     FRefCount: Integer;
   protected
@@ -576,16 +590,26 @@ type
   { TNotifiablePersistent }
   { TNotifiablePersistent provides a change notification mechanism }
   TNotifiablePersistent = class(TPlainInterfacedPersistent)
-  private
+  strict private
     FUpdateCount: Integer;
+    FLockUpdateCount: Integer;
+    FModified: boolean;
     FOnChange: TNotifyEvent;
+  strict protected
+    procedure DoChanged; virtual;
   protected
     property UpdateCount: Integer read FUpdateCount;
+    property LockUpdateCount: Integer read FLockUpdateCount;
+    property Modified: boolean read FModified;
   public
     procedure BeforeDestruction; override;
-    procedure Changed; virtual;
     procedure BeginUpdate; virtual;
     procedure EndUpdate; virtual;
+    procedure Changed; virtual;
+
+    procedure BeginLockUpdate; {$IFDEF USEINLINING} inline; {$ENDIF}
+    procedure EndLockUpdate; {$IFDEF USEINLINING} inline; {$ENDIF}
+
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
@@ -593,9 +617,9 @@ type
   { TThreadPersistent is an ancestor for TBitmap32 object. In addition to
     TPersistent methods, it provides thread-safe locking and change notification }
   TThreadPersistent = class(TNotifiablePersistent)
-  private
+  strict private
     FLockCount: Integer;
-  protected
+  strict protected
     {$IFDEF FPC}
     FLock: TCriticalSection;
     {$ELSE}
@@ -616,12 +640,14 @@ type
   protected
     FHeight: Integer;
     FWidth: Integer;
+  strict protected
     FOnResize: TNotifyEvent;
     procedure SetHeight(NewHeight: Integer); virtual;
     procedure SetWidth(NewWidth: Integer); virtual;
     procedure ChangeSize(var Width, Height: Integer; NewWidth, NewHeight: Integer); virtual;
   public
     constructor Create(Width, Height: Integer); reintroduce; overload;
+    destructor Destroy; override;
 
     procedure Delete; virtual;
     function  Empty: Boolean; virtual;
@@ -652,7 +678,7 @@ const
   AREAINFO_MASK         = $FF000000;
 
 type
-  TPixelCombineEvent = procedure(F: TColor32; var B: TColor32; M: TColor32) of object;
+  TPixelCombineEvent = procedure(F: TColor32; var B: TColor32; M: Cardinal) of object;
   TAreaChangedEvent = procedure(Sender: TObject; const Area: TRect;
     const Info: Cardinal) of object;
 
@@ -661,10 +687,16 @@ type
   TCustomBackend = class;
   TCustomBackendClass = class of TCustomBackend;
 
+{$ifndef FPC}
+  TResourceType = PChar;
+{$else FPC}
+  TResourceType = LCLType.TResourceType;
+{$endif FPC}
+
   { TCustomBitmap32 }
 
   TCustomBitmap32 = class(TCustomMap)
-  private
+  strict private
     FBackend: TCustomBackend;
     FBits: PColor32Array;
     FClipRect: TRect;
@@ -681,16 +713,11 @@ type
     FStippleCounter: Single;
     FStipplePattern: TArrayOfColor32;
     FStippleStep: Single;
-{$IFDEF DEPRECATEDMODE}
-    FStretchFilter: TStretchFilter;
-{$ENDIF}
     FOnPixelCombine: TPixelCombineEvent;
     FOnAreaChanged: TAreaChangedEvent;
     FOldOnAreaChanged: TAreaChangedEvent;
     FMeasuringMode: Boolean;
     FResampler: TCustomResampler;
-    procedure BackendChangedHandler(Sender: TObject); virtual;
-    procedure BackendChangingHandler(Sender: TObject); virtual;
 
 {$IFDEF BITS_GETTER}
     function GetBits: PColor32Array; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -703,51 +730,60 @@ type
     procedure SetDrawMode(Value: TDrawMode);
     procedure SetWrapMode(Value: TWrapMode);
     procedure SetMasterAlpha(Value: Cardinal);
-{$IFDEF DEPRECATEDMODE}
-    procedure SetStretchFilter(Value: TStretchFilter);
-{$ENDIF}
     procedure SetClipRect(const Value: TRect);
-    procedure SetResampler(Resampler: TCustomResampler);
+    procedure SetResampler(AResampler: TCustomResampler);
     function GetResamplerClassName: string;
     procedure SetResamplerClassName(const Value: string);
     function GetPenPos: TPoint;
     procedure SetPenPos(const Value: TPoint);
     function GetPenPosF: TFixedPoint;
     procedure SetPenPosF(const Value: TFixedPoint);
-{$IFDEF RGBA_FORMAT}
-    procedure SwapRB;
-{$ENDIF}
-  protected
+  public type
+    TInfoHeaderVersion = (InfoHeaderVersion1, InfoHeaderVersion2, InfoHeaderVersion3, InfoHeaderVersion4, InfoHeaderVersion5);
+  strict protected
+    procedure BackendChangedHandler(Sender: TObject); virtual;
+    procedure BackendChangingHandler(Sender: TObject); virtual;
+  strict protected
     WrapProcHorz: TWrapProcEx;
     WrapProcVert: TWrapProcEx;
     BlendProc: Pointer;
     RasterX, RasterY: Integer;
     RasterXF, RasterYF: TFixed;
     procedure ChangeSize(var Width, Height: Integer; NewWidth, NewHeight: Integer); override;
-    procedure CopyMapTo(Dst: TCustomBitmap32); virtual;
-    procedure CopyPropertiesTo(Dst: TCustomBitmap32); virtual;
-    procedure AssignTo(Dst: TPersistent); override;
-    function LoadFromBMPStream(Stream: TStream; Size: Int64): boolean;
-    function LoadFromDIBStream(Stream: TStream; Size: Int64): boolean;
-    procedure SaveToDIBStream(Stream: TStream; SaveTopDown: Boolean = False);
     function  Equal(B: TCustomBitmap32): Boolean;
-    procedure SET_T256(X, Y: Integer; C: TColor32);
-    procedure SET_TS256(X, Y: Integer; C: TColor32);
-    function  GET_T256(X, Y: Integer): TColor32;
-    function  GET_TS256(X, Y: Integer): TColor32;
     procedure ReadData(Stream: TStream); virtual;
     procedure WriteData(Stream: TStream); virtual;
-    procedure DefineProperties(Filer: TFiler); override;
 
-    procedure InitializeBackend(Backend: TCustomBackendClass); virtual;
+    procedure InitializeBackend(ABackendClass: TCustomBackendClass); virtual;
     procedure FinalizeBackend; virtual;
-    procedure SetBackend(const Backend: TCustomBackend); virtual;
+    procedure SetBackend(const ABackend: TCustomBackend); virtual;
 
 {$IFDEF FPC_HAS_CONSTREF}
     function QueryInterface(constref iid: TGuid; out obj): HResult; {$IFDEF WINDOWS}stdcall{$ELSE}cdecl{$ENDIF};
 {$ELSE}
     function QueryInterface(const iid: TGuid; out obj): HResult; stdcall;
 {$ENDIF}
+
+  protected
+    procedure CopyMapTo(Dst: TCustomBitmap32); virtual;
+    procedure CopyPropertiesTo(Dst: TCustomBitmap32); virtual;
+
+    procedure AssignTo(Dst: TPersistent); override;
+    procedure DefineProperties(Filer: TFiler); override;
+
+  protected
+    function LoadFromBMPStream(Stream: TStream; Size: Int64): boolean;
+    function LoadFromDIBStream(Stream: TStream; Size: Int64): boolean;
+    procedure SaveToDIBStream(Stream: TStream; SaveTopDown: Boolean = False; IncludeColorTable: boolean = False); overload;
+    procedure SaveToDIBStream(Stream: TStream; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion; IncludeColorTable: boolean = False); overload;
+    procedure SaveToStream(Stream: TStream; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion; IncludeColorTable: boolean); overload;
+    procedure SaveToFile(const FileName: string; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion; IncludeColorTable: boolean); overload;
+
+  protected
+    procedure SET_T256(X, Y: Integer; C: TColor32);
+    procedure SET_TS256(X, Y: Integer; C: TColor32);
+    function  GET_T256(X, Y: Integer): TColor32;
+    function  GET_TS256(X, Y: Integer): TColor32;
 
     function  GetPixel(X, Y: Integer): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
     function  GetPixelS(X, Y: Integer): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -778,12 +814,15 @@ type
     procedure SetPixelXS(X, Y: TFixed; Value: TColor32);
     procedure SetPixelXW(X, Y: TFixed; Value: TColor32);
   public
-    constructor Create(Backend: TCustomBackendClass); reintroduce; overload; virtual;
+    constructor Create(ABackendClass: TCustomBackendClass); reintroduce; overload; virtual;
     constructor Create; reintroduce; overload; virtual;
     constructor Create(Width, Height: Integer); reintroduce; overload; virtual;
     destructor Destroy; override;
 
     class function GetPlatformBackendClass: TCustomBackendClass; virtual;
+
+    procedure Changed; overload; override;
+    procedure Changed(const Area: TRect; const Info: Cardinal = AREAINFO_RECT); reintroduce; overload; virtual;
 
     procedure Assign(Source: TPersistent); override;
     function  BoundsRect: TRect;
@@ -798,17 +837,18 @@ type
     function ReleaseBackend: TCustomBackend;
 
     procedure PropertyChanged; virtual;
-    procedure Changed; overload; override;
-    procedure Changed(const Area: TRect; const Info: Cardinal = AREAINFO_RECT); reintroduce; overload; virtual;
 
     procedure LoadFromStream(Stream: TStream); virtual;
-    procedure SaveToStream(Stream: TStream; SaveTopDown: Boolean = False); virtual;
+    procedure SaveToStream(Stream: TStream; SaveTopDown: Boolean = False); overload; virtual;
+    procedure SaveToStream(Stream: TStream; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion); overload; virtual;
 
     procedure LoadFromFile(const FileName: string); virtual;
-    procedure SaveToFile(const FileName: string; SaveTopDown: Boolean = False); virtual;
+    procedure SaveToFile(const FileName: string); overload; virtual;
+    procedure SaveToFile(const FileName: string; SaveTopDown: Boolean); overload; virtual;
+    procedure SaveToFile(const FileName: string; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion); overload; virtual;
 
-    procedure LoadFromResourceID(Instance: THandle; ResID: Integer);
-    procedure LoadFromResourceName(Instance: THandle; const ResName: string);
+    procedure LoadFromResourceID(Instance: THandle; ResID: Integer; ResType: TResourceType = RT_BITMAP);
+    procedure LoadFromResourceName(Instance: THandle; const ResName: string; ResType: TResourceType = RT_BITMAP);
 
     procedure ResetAlpha; overload;
     procedure ResetAlpha(const AlphaValue: Byte); overload;
@@ -937,9 +977,6 @@ type
     property WrapMode: TWrapMode read FWrapMode write SetWrapMode default wmClamp;
     property MasterAlpha: Cardinal read FMasterAlpha write SetMasterAlpha default $FF;
     property OuterColor: TColor32 read FOuterColor write FOuterColor default 0;
-{$IFDEF DEPRECATEDMODE}
-    property StretchFilter: TStretchFilter read FStretchFilter write SetStretchFilter default sfNearest;
-{$ENDIF}
     property ResamplerClassName: string read GetResamplerClassName write SetResamplerClassName;
     property Resampler: TCustomResampler read FResampler write SetResampler;
     property OnChange;
@@ -948,12 +985,12 @@ type
     property OnResize;
   end;
 
-  TBitmap32 = class(TCustomBitmap32)
-  private
-    FOnHandleChanged: TNotifyEvent;
+  TCustomBitmap32Class = class of TCustomBitmap32;
 
-    procedure BackendChangedHandler(Sender: TObject); override;
-    procedure BackendChangingHandler(Sender: TObject); override;
+
+  TBitmap32 = class(TCustomBitmap32)
+  strict private
+    FOnHandleChanged: TNotifyEvent;
 
     procedure FontChanged(Sender: TObject);
     procedure CanvasChanged(Sender: TObject);
@@ -965,9 +1002,11 @@ type
 
     function GetFont: TFont;
     procedure SetFont(Value: TFont);
-  protected
+  strict protected
+    procedure BackendChangedHandler(Sender: TObject); override;
+    procedure BackendChangingHandler(Sender: TObject); override;
     procedure FinalizeBackend; override;
-    procedure SetBackend(const Backend: TCustomBackend); override;
+    procedure SetBackend(const ABackend: TCustomBackend); override;
 
     procedure HandleChanged; virtual;
     procedure CopyPropertiesTo(Dst: TCustomBitmap32); override;
@@ -1004,13 +1043,6 @@ type
     function  TextHeight(const Text: string): Integer;
     function  TextWidth(const Text: string): Integer;
     procedure RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32);
-    procedure TextoutW(X, Y: Integer; const Text: Widestring); overload;
-    procedure TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring); overload;
-    procedure TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring); overload;
-    function  TextExtentW(const Text: Widestring): TSize;
-    function  TextHeightW(const Text: Widestring): Integer;
-    function  TextWidthW(const Text: Widestring): Integer;
-    procedure RenderTextW(X, Y: Integer; const Text: Widestring; AALevel: Integer; Color: TColor32);
 
     property  Canvas: TCanvas read GetCanvas;
     function  CanvasAllocated: Boolean;
@@ -1031,12 +1063,14 @@ type
     graphics subsystem specific features.}
 
   TCustomBackend = class(TThreadPersistent)
-  protected
+  strict protected
     FBits: PColor32Array;
     FOwner: TCustomBitmap32;
     FOnChanging: TNotifyEvent;
+  protected
 
     procedure Changing; virtual;
+    procedure SetOwner(AOwner: TCustomBitmap32);
 
 {$IFDEF BITS_GETTER}
     function GetBits: PColor32Array; virtual;
@@ -1083,13 +1117,17 @@ type
   { TCustomResampler }
   { Base class for TCustomBitmap32 specific resamplers. }
   TCustomResampler = class(TCustomSampler)
-  private
+  strict private
     FBitmap: TCustomBitmap32;
     FClipRect: TRect;
     FPixelAccessMode: TPixelAccessMode;
     procedure SetPixelAccessMode(const Value: TPixelAccessMode);
-  protected
+  strict protected
     function GetWidth: TFloat; virtual;
+    procedure DoChanged; override;
+    property ClipRect: TRect read FClipRect;
+  protected
+    procedure AssignTo(Dst: TPersistent); override;
     procedure Resample(
       Dst: TCustomBitmap32; DstRect: TRect; DstClip: TRect;
       Src: TCustomBitmap32; SrcRect: TRect;
@@ -1099,12 +1137,9 @@ type
       SrcBits: PColor32Array; SrcWidth, SrcHeight: Integer; SrcRect: TRect;
       CombineOp: TDrawMode; CombineMode: TCombineMode; MasterAlpha: Cardinal;
       OuterColor: TColor32; CombineCallBack: TPixelCombineEvent); overload; virtual; abstract;
-    procedure AssignTo(Dst: TPersistent); override;
-    property ClipRect: TRect read FClipRect;
   public
     constructor Create; overload; virtual;
     constructor Create(ABitmap: TCustomBitmap32); overload; virtual;
-    procedure Changed; override;
     procedure PrepareSampling; override;
     function HasBounds: Boolean; override;
     function GetSampleBounds: TFloatRect; override;
@@ -1117,6 +1152,12 @@ type
 
 var
   StockBitmap: TBitmap;
+
+var
+  // Default file format version of BMPs written by SaveToStream/SaveToFile.
+  DefaultBitmapHeaderVersion: TCustomBitmap32.TInfoHeaderVersion = InfoHeaderVersion4;
+  // By default, do not include a color table in BI_BITFIELDS BMPs written by SaveToStream/SaveToFile.
+  DefaultBitmapIncludeColorTable: boolean = False;
 
 resourcestring
   RCStrUnmatchedReferenceCounting = 'Unmatched reference counting.';
@@ -1134,6 +1175,7 @@ uses
   GR32_Resamplers,
   GR32_Containers,
   GR32_Gamma,
+  GR32_Clipboard,
   GR32_Backends,
   GR32_Backends_Generic,
 {$IFDEF FPC}
@@ -1152,7 +1194,8 @@ uses
 {$ELSE}
   GR32_Backends_VCL,
 {$ENDIF}
-  GR32_VectorUtils;
+  GR32.ImageFormats,
+  GR32.ImageFormats.Default;
 
 type
   { We can not use the Win32 defined records and constants here since we are cross-platform. }
@@ -1184,14 +1227,14 @@ type
   // Each new version adds to the one before it.
   TBitmapInfoHeader = packed record
     biSize: DWORD;
-    biWidth: Longint;
-    biHeight: Longint;
+    biWidth: Integer;
+    biHeight: Integer;
     biPlanes: Word;
     biBitCount: Word;
     biCompression: DWORD;
     biSizeImage: DWORD;
-    biXPelsPerMeter: Longint;
-    biYPelsPerMeter: Longint;
+    biXPelsPerMeter: Integer;
+    biYPelsPerMeter: Integer;
     biClrUsed: DWORD;
     biClrImportant: DWORD;
   end;
@@ -1229,14 +1272,14 @@ type
   // V4 header: BITMAPV4HEADER
   TBitmapV4Header = packed record
     bV4Size: DWORD;
-    bV4Width: Longint;
-    bV4Height: Longint;
+    bV4Width: Integer;
+    bV4Height: Integer;
     bV4Planes: Word;
     bV4BitCount: Word;
     bV4V4Compression: DWORD;
     bV4SizeImage: DWORD;
-    bV4XPelsPerMeter: Longint;
-    bV4YPelsPerMeter: Longint;
+    bV4XPelsPerMeter: Integer;
+    bV4YPelsPerMeter: Integer;
     bV4ClrUsed: DWORD;
     bV4ClrImportant: DWORD;
     bV4RedMask: DWORD;
@@ -1253,14 +1296,14 @@ type
   // V5 header: BITMAPV5HEADER
   TBitmapV5Header = packed record
     bV5Size: DWORD;
-    bV5Width: Longint;
-    bV5Height: Longint;
+    bV5Width: Integer;
+    bV5Height: Integer;
     bV5Planes: Word;
     bV5BitCount: Word;
     bV5Compression: DWORD;
     bV5SizeImage: DWORD;
-    bV5XPelsPerMeter: Longint;
-    bV5YPelsPerMeter: Longint;
+    bV5XPelsPerMeter: Integer;
+    bV5YPelsPerMeter: Integer;
     bV5ClrUsed: DWORD;
     bV5ClrImportant: DWORD;
     bV5RedMask: DWORD;
@@ -1309,36 +1352,17 @@ const
 
 { Color construction and conversion functions }
 
-{$IFDEF PUREPASCAL}
-{$DEFINE USENATIVECODE}
-{$ENDIF}
-{$IFDEF TARGET_X64}
-{$DEFINE USENATIVECODE}
-{$ENDIF}
-
 function Color32(WinColor: TColor): TColor32; overload;
-{$IFDEF WIN_COLOR_FIX}
-var
-  I: Longword;
-{$ENDIF}
 begin
-  if WinColor < 0 then WinColor := GetSysColor(WinColor and $000000FF);
+  if (WinColor < 0) then
+    WinColor := GetSysColor(WinColor and $000000FF);
 
-{$IFDEF WIN_COLOR_FIX}
-  Result := $FF000000;
-  I := (WinColor and $00FF0000) shr 16;
-  if I <> 0 then
-    Result := Result or TColor32(Integer(I) - 1);
-  I := WinColor and $0000FF00;
-  if I <> 0 then
-    Result := Result or TColor32(Integer(I) - $00000100);
-  I := WinColor and $000000FF;
-  if I <> 0 then
-    Result := Result or TColor32(Integer(I) - 1) shl 16;
-{$ELSE}
-{$IFDEF USENATIVECODE}
-  Result := $FF shl 24 + (WinColor and $FF0000) shr 16 + (WinColor and $FF00) +
-    (WinColor and $FF) shl 16;
+{$IF Defined(PUREPASCAL) or Defined(TARGET_X64)}
+  {$IFNDEF RGBA_FORMAT}
+  Result := $FF000000 or ((TColor32(WinColor) and $FF0000) shr 16) or (TColor32(WinColor) and $FF00) or ((TColor32(WinColor) and $FF) shl 16);
+  {$ELSE RGBA_FORMAT}
+  Result := $FF000000 or (TColor32(WinColor) and $FFFFFF);
+  {$ENDIF RGBA_FORMAT}
 {$ELSE}
   asm
         MOV     EAX,WinColor
@@ -1347,21 +1371,24 @@ begin
         ROR     EAX,8
         MOV     Result,EAX
   end;
-{$ENDIF}
-{$ENDIF}
+{$IFEND}
 end;
 
 function Color32(R, G, B: Byte; A: Byte = $FF): TColor32; overload;
-{$IFDEF USENATIVECODE}
+{$IF Defined(PUREPASCAL) or Defined(TARGET_X64)}
 begin
+  {$IFNDEF RGBA_FORMAT}
   Result := (A shl 24) or (R shl 16) or (G shl  8) or B;
+  {$ELSE RGBA_FORMAT}
+  Result := (A shl 24) or (B shl 16) or (G shl  8) or R;
+  {$ENDIF RGBA_FORMAT}
 {$ELSE}
-asm
+  asm
         MOV     AH, A
         SHL     EAX, 16
         MOV     AH, DL
         MOV     AL, CL
-{$ENDIF}
+{$IFEND}
 end;
 
 function Color32(Index: Byte; var Palette: TPalette32): TColor32; overload;
@@ -1376,48 +1403,163 @@ begin
 end;
 
 function WinColor(Color32: TColor32): TColor;
-{$IFDEF PUREPASCAL}
+{$IFDEF RGBA_FORMAT}
+begin
+  Result := Color32 and $00FFFFFF;
+end;
+{$ELSE RGBA_FORMAT}
+{$IF Defined(PUREPASCAL)}
 begin
   Result := ((Color32 and $00FF0000) shr 16) or
              (Color32 and $0000FF00) or
             ((Color32 and $000000FF) shl 16);
 {$ELSE}
 {$IFDEF FPC}assembler; nostackframe;{$ENDIF}
-asm
+  asm
 {$IFDEF TARGET_x64}
         MOV     EAX, ECX
 {$ENDIF}
         // the alpha channel byte is set to zero!
-        ROL     EAX, 8  // ABGR  ->  RGBA
+        ROL     EAX, 8  // ABGR  ->  BGRA
         XOR     AL, AL  // BGRA  ->  BGR0
         BSWAP   EAX     // BGR0  ->  0RGB
-{$ENDIF}
+{$IFEND}
 end;
+{$ENDIF RGBA_FORMAT}
 
-function ArrayOfColor32(Colors: array of TColor32): TArrayOfColor32;
+function ArrayOfColor32(const Colors: array of TColor32): TArrayOfColor32;
 var
   L: Integer;
 begin
   // build a dynamic color array from specified colors
-  L := High(Colors) + 1;
+  L := Length(Colors);
   SetLength(Result, L);
   MoveLongword(Colors[0], Result[0], L);
 end;
 
+procedure SwapRedBlueMem(var Color32: TColor32);
+{$IF Defined(PUREPASCAL)}
+var
+  Temp: Byte;
+begin
+  Temp := TColor32Entry(Color32).R;
+  TColor32Entry(Color32).R := TColor32Entry(Color32).B;
+  TColor32Entry(Color32).B := Temp;
+{$ELSE}
+  asm
+        MOV     EDX, DWORD PTR [Color32]
+        ROL     EDX, 8  // ARGB  ->  RGBA
+        BSWAP   EDX     // RGBA  ->  ABGR
+        MOV     DWORD PTR [Color32], EDX
+{$IFEND}
+end;
+
+function SwapRedBlue(Color32: TColor32): TColor32;
+{$IF Defined(PUREPASCAL)}
+begin
+  Result := Color32;
+  SwapRedBlueMem(Result);
+{$ELSE}
+  asm
+{$IFDEF TARGET_x64}
+        MOV     EAX, ECX
+{$ENDIF}
+        ROL     EAX, 8  // ARGB  ->  RGBA
+        BSWAP   EAX     // RGBA  ->  ABGR
+{$IFEND}
+end;
+
+function Color32ToBGRA(Color32: TColor32): DWORD;
+begin
+{$IFNDEF RGBA_FORMAT}
+  Result := Color32;
+{$ELSE RGBA_FORMAT}
+  Result := SwapRedBlue(Color32);
+{$ENDIF RGBA_FORMAT}
+end;
+
+procedure Color32ToBGRAMem(var Color32: TColor32);
+begin
+{$IFDEF RGBA_FORMAT}
+  SwapRedBlueMem(Color32);
+{$ENDIF RGBA_FORMAT}
+end;
+
+function Color32ToRGBA(Color32: TColor32): DWORD;
+begin
+{$IFDEF RGBA_FORMAT}
+  Result := Color32;
+{$ELSE RGBA_FORMAT}
+  Result := SwapRedBlue(Color32);
+{$ENDIF RGBA_FORMAT}
+end;
+
+procedure Color32ToRGBAMem(var Color32: TColor32); {$IFDEF USEINLINING} inline; {$ENDIF}
+begin
+{$IFNDEF RGBA_FORMAT}
+  SwapRedBlueMem(Color32);
+{$ENDIF RGBA_FORMAT}
+end;
+
+function BGRAToColor32(BGRA: DWORD): TColor32;
+begin
+{$IFNDEF RGBA_FORMAT}
+  Result := BGRA;
+{$ELSE RGBA_FORMAT}
+  Result := SwapRedBlue(BGRA);
+{$ENDIF RGBA_FORMAT}
+end;
+
+procedure BGRAToColor32Mem(var BGRA: DWORD); {$IFDEF USEINLINING} inline; {$ENDIF}
+begin
+{$IFDEF RGBA_FORMAT}
+  SwapRedBlueMem(TColor32(BGRA));
+{$ENDIF RGBA_FORMAT}
+end;
+
+function RGBAToColor32(RGBA: DWORD): TColor32;
+begin
+{$IFDEF RGBA_FORMAT}
+  Result := RGBA;
+{$ELSE RGBA_FORMAT}
+  Result := SwapRedBlue(RGBA);
+{$ENDIF RGBA_FORMAT}
+end;
+
+procedure RGBAToColor32mem(var RGBA: DWORD); {$IFDEF USEINLINING} inline; {$ENDIF}
+begin
+{$IFNDEF RGBA_FORMAT}
+  SwapRedBlueMem(TColor32(RGBA));
+{$ENDIF RGBA_FORMAT}
+end;
+
 procedure Color32ToRGB(Color32: TColor32; var R, G, B: Byte);
 begin
+{$IFNDEF RGBA_FORMAT}
   R := (Color32 and $00FF0000) shr 16;
   G := (Color32 and $0000FF00) shr 8;
-  B := Color32 and $000000FF;
+  B := (Color32 and $000000FF);
+{$ELSE RGBA_FORMAT}
+  R := (Color32 and $000000FF);
+  G := (Color32 and $0000FF00) shr 8;
+  B := (Color32 and $00FF0000) shr 16;
+{$ENDIF RGBA_FORMAT}
 end;
 
 procedure Color32ToRGBA(Color32: TColor32; var R, G, B, A: Byte);
 begin
+{$IFNDEF RGBA_FORMAT}
   A := Color32 shr 24;
   R := (Color32 and $00FF0000) shr 16;
   G := (Color32 and $0000FF00) shr 8;
-  B := Color32 and $000000FF;
-end; 
+  B := (Color32 and $000000FF);
+{$ELSE RGBA_FORMAT}
+  A := Color32 shr 24;
+  R := (Color32 and $000000FF);
+  G := (Color32 and $0000FF00) shr 8;
+  B := (Color32 and $00FF0000) shr 16;
+{$ENDIF RGBA_FORMAT}
+end;
 
 function Color32Components(R, G, B, A: Boolean): TColor32Components;
 const
@@ -1431,7 +1573,11 @@ end;
 
 function RedComponent(Color32: TColor32): Integer;
 begin
+{$IFNDEF RGBA_FORMAT}
   Result := (Color32 and $00FF0000) shr 16;
+{$ELSE RGBA_FORMAT}
+  Result := Color32 and $000000FF;
+{$ENDIF RGBA_FORMAT}
 end;
 
 function GreenComponent(Color32: TColor32): Integer;
@@ -1441,7 +1587,11 @@ end;
 
 function BlueComponent(Color32: TColor32): Integer;
 begin
+{$IFNDEF RGBA_FORMAT}
   Result := Color32 and $000000FF;
+{$ELSE RGBA_FORMAT}
+  Result := (Color32 and $00FF0000) shr 16;
+{$ENDIF RGBA_FORMAT}
 end;
 
 function AlphaComponent(Color32: TColor32): Integer;
@@ -1452,11 +1602,19 @@ end;
 function Intensity(Color32: TColor32): Integer;
 begin
   // (R * 61 + G * 174 + B * 21) / 256
+{$IFNDEF RGBA_FORMAT}
   Result := (
     (Color32 and $00FF0000) shr 16 * 61 +
     (Color32 and $0000FF00) shr 8 * 174 +
     (Color32 and $000000FF) * 21
     ) shr 8;
+{$ELSE RGBA_FORMAT}
+  Result := (
+    (Color32 and $000000FF) * 61 +
+    (Color32 and $0000FF00) shr 8 * 174 +
+    (Color32 and $00FF0000) shr 16 * 21
+    ) shr 8;
+{$ENDIF RGBA_FORMAT}
 end;
 
 function InvertColor(Color32: TColor32): TColor32;
@@ -1608,9 +1766,9 @@ procedure RGBtoHSL(RGB: TColor32; out H, S, L: Byte);
 var
   R, G, B, D, Cmax, Cmin, HL: Integer;
 begin
-  R := (RGB shr 16) and $ff;
-  G := (RGB shr 8) and $ff;
-  B := RGB and $ff;
+  R := RedComponent(RGB);
+  G := GreenComponent(RGB);
+  B := BlueComponent(RGB);
 
   Cmax := Max(R, G, B);
   Cmin := Min(R, G, B);
@@ -1720,6 +1878,7 @@ end;
 
 { Palette conversion }
 
+{$IFNDEF RGBA_FORMAT}
 function WinPalette(const P: TPalette32): HPALETTE;
 var
   L: TMaxLogPalette;
@@ -1742,6 +1901,7 @@ begin
   end;
   Result := CreatePalette(l0);
 end;
+{$ENDIF RGBA_FORMAT}
 
 
 { Fixed-point conversion routines }
@@ -2317,7 +2477,18 @@ end;
 procedure TNotifiablePersistent.Beforedestruction;
 begin
   inherited;
-  inc(FUpdateCount);
+  Inc(FLockUpdateCount);
+  Inc(FUpdateCount);
+end;
+
+procedure TNotifiablePersistent.BeginLockUpdate;
+begin
+  Inc(FLockUpdateCount);
+end;
+
+procedure TNotifiablePersistent.EndLockUpdate;
+begin
+  Dec(FLockUpdateCount);
 end;
 
 procedure TNotifiablePersistent.BeginUpdate;
@@ -2325,15 +2496,30 @@ begin
   Inc(FUpdateCount);
 end;
 
-procedure TNotifiablePersistent.Changed;
-begin
-  if (FUpdateCount = 0) and Assigned(FOnChange) then FOnChange(Self);
-end;
-
 procedure TNotifiablePersistent.EndUpdate;
 begin
   Assert(FUpdateCount > 0, 'Unpaired TThreadPersistent.EndUpdate');
+  if (FUpdateCount = 1) and (FModified) then
+  begin
+    DoChanged;
+    FModified := False;
+  end;
   Dec(FUpdateCount);
+end;
+
+procedure TNotifiablePersistent.Changed;
+begin
+  if (FLockUpdateCount > 0) then
+    exit;
+  BeginUpdate;
+  FModified := True;
+  EndUpdate;
+end;
+
+procedure TNotifiablePersistent.DoChanged;
+begin
+  if (Assigned(FOnChange)) then
+    FOnChange(Self);
 end;
 
 
@@ -2367,8 +2553,14 @@ end;
 
 constructor TCustomMap.Create(Width, Height: Integer);
 begin
-  Create;
+  inherited Create;
   SetSize(Width, Height);
+end;
+
+destructor TCustomMap.Destroy;
+begin
+  FOnResize := nil;
+  inherited;
 end;
 
 procedure TCustomMap.ChangeSize(var Width, Height: Integer; NewWidth, NewHeight: Integer);
@@ -2389,7 +2581,8 @@ end;
 
 procedure TCustomMap.Resized;
 begin
-  if Assigned(FOnResize) then FOnResize(Self);
+  if Assigned(FOnResize) then
+    FOnResize(Self);
 end;
 
 procedure TCustomMap.SetHeight(NewHeight: Integer);
@@ -2399,13 +2592,22 @@ end;
 
 function TCustomMap.SetSize(NewWidth, NewHeight: Integer): Boolean;
 begin
-  if NewWidth < 0 then NewWidth := 0;
-  if NewHeight < 0 then NewHeight := 0;
+  if NewWidth < 0 then
+    NewWidth := 0;
+  if NewHeight < 0 then
+    NewHeight := 0;
+
   Result := (NewWidth <> FWidth) or (NewHeight <> FHeight);
+
   if Result then
   begin
-    ChangeSize(FWidth, FHeight, NewWidth, NewHeight);
-    Changed;
+    BeginUpdate;
+    try
+      ChangeSize(FWidth, FHeight, NewWidth, NewHeight);
+      Changed;
+    finally
+      EndUpdate;
+    end;
     Resized;
   end;
 end;
@@ -2414,11 +2616,14 @@ function TCustomMap.SetSizeFrom(Source: TPersistent): Boolean;
 begin
   if Source is TCustomMap then
     Result := SetSize(TCustomMap(Source).Width, TCustomMap(Source).Height)
-  else if Source is TGraphic then
+  else
+  if Source is TGraphic then
     Result := SetSize(TGraphic(Source).Width, TGraphic(Source).Height)
-  else if Source is TControl then
+  else
+  if Source is TControl then
     Result := SetSize(TControl(Source).Width, TControl(Source).Height)
-  else if Source = nil then
+  else
+  if Source = nil then
     Result := SetSize(0, 0)
   else
     raise Exception.CreateFmt(RCStrCannotSetSize, [Source.ClassName]);
@@ -2432,11 +2637,11 @@ end;
 
 { TCustomBitmap32 }
 
-constructor TCustomBitmap32.Create(Backend: TCustomBackendClass);
+constructor TCustomBitmap32.Create(ABackendClass: TCustomBackendClass);
 begin
   inherited Create;
 
-  InitializeBackend(Backend);
+  InitializeBackend(ABackendClass);
 
   FOuterColor := $00000000;  // by default as full transparency black
 
@@ -2457,8 +2662,10 @@ end;
 
 destructor TCustomBitmap32.Destroy;
 begin
+  BeginLockUpdate;
   Lock;
   try
+    FOnAreaChanged := nil; // Avoid notification during destruction
     SetSize(0, 0);
     FResampler.Free;
     FinalizeBackend;
@@ -2468,16 +2675,16 @@ begin
   inherited;
 end;
 
-procedure TCustomBitmap32.InitializeBackend(Backend: TCustomBackendClass);
+procedure TCustomBitmap32.InitializeBackend(ABackendClass: TCustomBackendClass);
 begin
-  Backend.Create(Self);
+  ABackendClass.Create(Self);
 end;
 
 procedure TCustomBitmap32.FinalizeBackend;
 begin
   // Drop ownership of backend now:
   // It's a zombie now.
-  FBackend.FOwner := nil;
+  FBackend.SetOwner(nil);
   FBackend.OnChange := nil;
   FBackend.OnChanging := nil;
 
@@ -2538,28 +2745,31 @@ begin
   FBackend := nil;
 end;
 
-procedure TCustomBitmap32.SetBackend(const Backend: TCustomBackend);
+procedure TCustomBitmap32.SetBackend(const ABackend: TCustomBackend);
 begin
-  if Assigned(Backend) and (Backend <> FBackend) then
-  begin
-    BeginUpdate;
+  if (ABackend = nil) or (ABackend = FBackend) then
+    exit;
 
-    Backend.FOwner := Self;
+  BeginUpdate;
+  try
 
-    if Assigned(FBackend) then
+    ABackend.SetOwner(Self);
+
+    if (FBackend <> nil) then
     begin
-      Backend.Assign(FBackend);
+      ABackend.Assign(FBackend);
       FinalizeBackend;
     end;
 
-    FBackend := Backend;
+    FBackend := ABackend;
     FBackend.OnChange := BackendChangedHandler;
     FBackend.OnChanging := BackendChangingHandler;
 
-    EndUpdate;
-    
     FBackend.Changed;
+
     Changed;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -2624,308 +2834,58 @@ begin
 end;
 
 procedure TCustomBitmap32.AssignTo(Dst: TPersistent);
-
-  procedure AssignToBitmap(Bmp: TBitmap; SrcBitmap: TCustomBitmap32);
-  var
-    SavedBackend: TCustomBackend;
-    FontSupport: IFontSupport;
-  begin
-    RequireBackendSupport(SrcBitmap, [IDeviceContextSupport], romOr, False, SavedBackend);
-    try
-{$IFDEF COMPILER2009_UP}
-      Bmp.SetSize(0, 0);
-{$ELSE}
-      Bmp.Width := 0;
-      Bmp.Height := 0;
-{$ENDIF}
-
-      Bmp.PixelFormat := pf32Bit;
-
-{$IFDEF COMPILER2009_UP}
-      Bmp.SetSize(SrcBitmap.Width, SrcBitmap.Height);
-{$ELSE}
-      Bmp.Width := SrcBitmap.Width;
-      Bmp.Height := SrcBitmap.Height;
-{$ENDIF}
-
-      if Supports(SrcBitmap.Backend, IFontSupport, FontSupport) then // this is optional
-      begin
-        Bmp.Canvas.Font.Assign(FontSupport.Font);
-        FontSupport := nil;
-      end;
-
-      if SrcBitmap.Empty then Exit;
-
-      Bmp.Canvas.Lock;
-      try
-        (SrcBitmap.Backend as IDeviceContextSupport).DrawTo(Bmp.Canvas.Handle,
-          BoundsRect, BoundsRect)
-      finally
-        Bmp.Canvas.UnLock;
-      end;
-    finally
-      RestoreBackend(SrcBitmap, SavedBackend);
-    end;
-  end;
-
-var
-  Bmp: TBitmap;
 begin
-  if Dst is TPicture then
-    AssignToBitmap(TPicture(Dst).Bitmap, Self)
-  else if Dst is TBitmap then
-    AssignToBitmap(TBitmap(Dst), Self)
-  else if Dst is TClipboard then
-  begin
-    Bmp := TBitmap.Create;
-    try
-      AssignToBitmap(Bmp, Self);
-      TClipboard(Dst).Assign(Bmp);
-    finally
-      Bmp.Free;
-    end;
-  end
-  else
+  if (not ImageFormatManager.Adapters.AssignTo(Self, Dst)) then
     inherited;
 end;
 
 procedure TCustomBitmap32.Assign(Source: TPersistent);
-
-  procedure AssignFromGraphicPlain(TargetBitmap: TCustomBitmap32;
-    SrcGraphic: TGraphic; FillColor: TColor32; ResetAlphaAfterDrawing: Boolean);
-  var
-    SavedBackend: TCustomBackend;
-    Canvas: TCanvas;
-    DeviceContextSupport: IDeviceContextSupport;
-    CanvasSupport: ICanvasSupport;
-    InteroperabilitySupport: IInteroperabilitySupport;
-  begin
-    if not Assigned(SrcGraphic) then
-      Exit;
-    RequireBackendSupport(TargetBitmap, [IDeviceContextSupport, ICanvasSupport,
-      IInteroperabilitySupport], romOr, True, SavedBackend);
-    try
-      TargetBitmap.SetSize(SrcGraphic.Width, SrcGraphic.Height);
-      if TargetBitmap.Empty then Exit;
-
-      TargetBitmap.Clear(FillColor);
-
-      if Supports(TargetBitmap.Backend, IInteroperabilitySupport, InteroperabilitySupport) then
-      begin
-        InteroperabilitySupport.CopyFrom(SrcGraphic);
-        InteroperabilitySupport := nil;
-      end else
-      if Supports(TargetBitmap.Backend, ICanvasSupport, CanvasSupport) then
-      begin
-        TGraphicAccess(SrcGraphic).Draw(CanvasSupport.Canvas,
-          MakeRect(0, 0, TargetBitmap.Width, TargetBitmap.Height));
-        CanvasSupport := nil;
-      end else
-      if Supports(TargetBitmap.Backend, IDeviceContextSupport, DeviceContextSupport) then
-      begin
-        Canvas := TCanvas.Create;
-        try
-          Canvas.Lock;
-          try
-            Canvas.Handle := DeviceContextSupport.Handle;
-
-            TGraphicAccess(SrcGraphic).Draw(Canvas,
-              MakeRect(0, 0, TargetBitmap.Width, TargetBitmap.Height));
-          finally
-            Canvas.Unlock;
-          end;
-        finally
-          Canvas.Free;
-        end;
-        DeviceContextSupport := nil;
-      end else
-        raise Exception.Create(RCStrInpropriateBackend);
-
-      if ResetAlphaAfterDrawing then
-        ResetAlpha;
-    finally
-      RestoreBackend(TargetBitmap, SavedBackend);
-    end;
-  end;
-
-  procedure AssignFromGraphicMasked(TargetBitmap: TCustomBitmap32; SrcGraphic: TGraphic);
-  var
-    TempBitmap: TCustomBitmap32;
-    I: integer;
-    DstP, SrcP: PColor32;
-    DstColor: TColor32;
-  begin
-    AssignFromGraphicPlain(TargetBitmap, SrcGraphic, clWhite32, False); // mask on white
-    if TargetBitmap.Empty then
-    begin
-      TargetBitmap.Clear;
-      Exit;
-    end;
-
-    if TargetBitmap.Backend <> nil then
-      // Use the same backend type as the target. See Issue #127
-      TempBitmap := TCustomBitmap32.Create(TCustomBackendClass(TargetBitmap.Backend.ClassType))
-    else
-      TempBitmap := TCustomBitmap32.Create;
-    try
-      AssignFromGraphicPlain(TempBitmap, SrcGraphic, clRed32, False); // mask on red
-
-      DstP := @TargetBitmap.Bits[0];
-      SrcP := @TempBitmap.Bits[0];
-      for I := 0 to TargetBitmap.Width * TargetBitmap.Height - 1 do
-      begin
-        DstColor := DstP^ and $00FFFFFF;
-        // this checks for transparency by comparing the pixel-color of the
-        // temporary bitmap (red masked) with the pixel of our
-        // bitmap (white masked). if they match, make that pixel opaque
-        if DstColor = (SrcP^ and $00FFFFFF) then
-          DstP^ := DstColor or $FF000000
-        else
-        // if the colors do not match (that is the case if there is a
-        // match "is clRed32 = clWhite32 ?"), just make that pixel
-        // transparent:
-          DstP^ := DstColor;
-
-         Inc(SrcP); Inc(DstP);
-      end;
-    finally
-      TempBitmap.Free;
-    end;
-  end;
-
-  procedure AssignFromBitmap(TargetBitmap: TCustomBitmap32; SrcBmp: TBitmap);
-  var
-    TransparentColor: TColor32;
-    DstP: PColor32;
-    I: integer;
-    DstColor: TColor32;
-    FontSupport: IFontSupport;
-  begin
-    AssignFromGraphicPlain(TargetBitmap, SrcBmp, 0, SrcBmp.PixelFormat <> pf32bit);
-    if TargetBitmap.Empty then Exit;
-
-    if SrcBmp.Transparent then
-    begin
-      TransparentColor := Color32(SrcBmp.TransparentColor) and $00FFFFFF;
-      DstP := @TargetBitmap.Bits[0];
-      for I := 0 to TargetBitmap.Width * TargetBitmap.Height - 1 do
-      begin
-        DstColor := DstP^ and $00FFFFFF;
-        if DstColor = TransparentColor then
-          DstP^ := DstColor;
-        Inc(DstP);
-      end;
-    end;
-
-    if Supports(TargetBitmap.Backend, IFontSupport, FontSupport) then // this is optional
-      FontSupport.Font.Assign(SrcBmp.Canvas.Font);
-  end;
-
-  procedure AssignFromIcon(TargetBitmap: TCustomBitmap32; SrcIcon: TIcon);
-  var
-    I: Integer;
-    P: PColor32Entry;
-    ReassignFromMasked: Boolean;
-  begin
-    AssignFromGraphicPlain(TargetBitmap, SrcIcon, 0, False);
-    if TargetBitmap.Empty then Exit;
-
-    // Check if the icon was painted with a merged alpha channel.
-    // That happens transparently for new-style 32-bit icons.
-    // For all other bit depths GDI will reset our alpha channel to opaque.
-    ReassignFromMasked := True;
-    P := PColor32Entry(@TargetBitmap.Bits[0]);
-    for I := 0 to TargetBitmap.Height * TargetBitmap.Width - 1 do
-    begin
-      if P.A > 0 then
-      begin
-        ReassignFromMasked := False;
-        Break;
-      end;
-      Inc(P);
-    end;
-
-    // No alpha values found? Use masked approach...
-    if ReassignFromMasked then
-      AssignFromGraphicMasked(TargetBitmap, SrcIcon);
-  end;
-
-  procedure AssignFromGraphic(TargetBitmap: TCustomBitmap32; SrcGraphic: TGraphic);
-  begin
-    if SrcGraphic is TBitmap then
-      AssignFromBitmap(TargetBitmap, TBitmap(SrcGraphic))
-    else if SrcGraphic is TIcon then
-      AssignFromIcon(TargetBitmap, TIcon(SrcGraphic))
-{$IFNDEF PLATFORM_INDEPENDENT}
-    else if SrcGraphic is TMetaFile then
-      AssignFromGraphicMasked(TargetBitmap, SrcGraphic)
-    {$IFDEF COMPILER2010_UP}
-    else if SrcGraphic is TWICImage then
-      AssignFromGraphicPlain(TargetBitmap, SrcGraphic, 0, False)
-    {$ENDIF}
-{$ENDIF}
-    else
-      AssignFromGraphicPlain(TargetBitmap, SrcGraphic, clWhite32, True);
-  end;
-
-var
-  Picture: TPicture;
 begin
   BeginUpdate;
   try
-    if not Assigned(Source) then
+
+    if (Source = nil) then
       SetSize(0, 0)
-    else if Source is TCustomBitmap32 then
+    else
+    if (Source is TCustomBitmap32) then
     begin
       TCustomBitmap32(Source).CopyMapTo(Self);
       TCustomBitmap32(Source).CopyPropertiesTo(Self);
-    end
-    else if Source is TGraphic then
-      AssignFromGraphic(Self, TGraphic(Source))
-    else if Source is TPicture then
-      AssignFromGraphic(Self, TPicture(Source).Graphic)
-    else if Source is TClipboard then
-    begin
-      Picture := TPicture.Create;
-      try
-        Picture.Assign(TClipboard(Source));
-        AssignFromGraphic(Self, Picture.Graphic);
-      finally
-        Picture.Free;
-      end;
-    end
-    else
-      inherited; // default handler
+    end else
+    if (not ImageFormatManager.Adapters.AssignFrom(Self, Source)) then
+      inherited; // defer to Source.AssignTo
+
+    Changed;
   finally;
     EndUpdate;
-    Changed;
   end;
 end;
 
 procedure TCustomBitmap32.CopyMapTo(Dst: TCustomBitmap32);
 begin
-  Dst.SetSize(Width, Height);
-  if not Empty then
-    MoveLongword(Bits[0], Dst.Bits[0], Width * Height);
+  Dst.BeginUpdate;
+  try
+    Dst.SetSize(Width, Height);
+    if not Empty then
+      MoveLongword(Bits[0], Dst.Bits[0], Width * Height);
+
+    Dst.Changed;
+  finally
+    Dst.EndUpdate;
+  end;
 end;
 
 procedure TCustomBitmap32.CopyPropertiesTo(Dst: TCustomBitmap32);
 begin
-  with Dst do
-  begin
-    DrawMode := Self.DrawMode;
-    CombineMode := Self.CombineMode;
-    WrapMode := Self.WrapMode;
-    MasterAlpha := Self.MasterAlpha;
-    OuterColor := Self.OuterColor;
+  Dst.DrawMode := DrawMode;
+  Dst.CombineMode := CombineMode;
+  Dst.WrapMode := WrapMode;
+  Dst.MasterAlpha := MasterAlpha;
+  Dst.OuterColor := OuterColor;
 
-{$IFDEF DEPRECATEDMODE}
-    StretchFilter := Self.StretchFilter;
-{$ENDIF}
-    ResamplerClassName := Self.ResamplerClassName;
-    if Assigned(Resampler) and Assigned(Self.Resampler) then
-      Resampler.Assign(Self.Resampler);
-  end;
+  Dst.ResamplerClassName := ResamplerClassName;
+  if (Dst.Resampler <> nil) and (Resampler <> nil) then
+    Dst.Resampler.Assign(Resampler);
 end;
 
 constructor TCustomBitmap32.Create(Width, Height: Integer);
@@ -2950,21 +2910,6 @@ procedure TCustomBitmap32.SetPenPosF(const Value: TFixedPoint);
 begin
   MoveTo(Value.X, Value.Y);
 end;
-
-{$IFDEF RGBA_FORMAT}
-procedure TCustomBitmap32.SwapRB;
-var
-  Index : Integer;
-  Temp: Byte;
-begin
-  for Index := 0 to FHeight * FWidth - 1 do
-  begin
-    Temp := TColor32Entry(FBits[Index]).R;
-    TColor32Entry(FBits[Index]).R := TColor32Entry(FBits[Index]).B;
-    TColor32Entry(FBits[Index]).B := Temp;
-  end;
-end;
-{$ENDIF}
 
 procedure TCustomBitmap32.SetPixel(X, Y: Integer; Value: TColor32);
 begin
@@ -3021,18 +2966,21 @@ end;
 
 procedure TCustomBitmap32.Draw(DstX, DstY: Integer; Src: TCustomBitmap32);
 begin
-  if Assigned(Src) then Src.DrawTo(Self, DstX, DstY);
+  if (Src <> nil) then
+    Src.DrawTo(Self, DstX, DstY);
 end;
 
 procedure TCustomBitmap32.Draw(DstX, DstY: Integer; const SrcRect: TRect;
   Src: TCustomBitmap32);
 begin
-  if Assigned(Src) then Src.DrawTo(Self, DstX, DstY, SrcRect);
+  if (Src <> nil) then
+    Src.DrawTo(Self, DstX, DstY, SrcRect);
 end;
 
 procedure TCustomBitmap32.Draw(const DstRect, SrcRect: TRect; Src: TCustomBitmap32);
 begin
-  if Assigned(Src) then Src.DrawTo(Self, DstRect, SrcRect);
+  if (Src <> nil) then
+    Src.DrawTo(Self, DstRect, SrcRect);
 end;
 
 procedure TCustomBitmap32.DrawTo(Dst: TCustomBitmap32);
@@ -3190,15 +3138,15 @@ begin
   flrx := X and $FF;
   flry := Y and $FF;
 
-  {$IFDEF USENATIVECODE}
+{$IF Defined(PUREPASCAL) or Defined(TARGET_X64)}
   X := X div 256;
   Y := Y div 256;
-  {$ELSE}
+{$ELSE}
   asm
     SAR X, 8
     SAR Y, 8
   end;
-  {$ENDIF}
+{$IFEND}
 
   P := @Bits[X + Y * FWidth];
   if FCombineMode = cmBlend then
@@ -3243,15 +3191,15 @@ begin
   flrx := X and $FF;
   flry := Y and $FF;
 
-  {$IFDEF USENATIVECODE}
+{$IF Defined(PUREPASCAL) or Defined(TARGET_X64)}
   X := X div 256;
   Y := Y div 256;
-  {$ELSE}
+{$ELSE}
   asm
     SAR X, 8
     SAR Y, 8
   end;
-  {$ENDIF}
+{$IFEND}
 
   P := @Bits[X + Y * FWidth];
   if FCombineMode = cmBlend then
@@ -3357,20 +3305,22 @@ begin
   if not FMeasuringMode then
   begin
 {$ENDIF}
-    {$IFDEF USENATIVECODE}
+
+{$IF Defined(PUREPASCAL) or Defined(TARGET_X64)}
     X := (X + $7F) div 256;
     Y := (Y + $7F) div 256;
-    {$ELSE}
+{$ELSE}
     asm
           ADD X, $7F
           ADD Y, $7F
           SAR X, 8
           SAR Y, 8
     end;
-    {$ENDIF}
+{$IFEND}
 
     SET_TS256(X, Y, Value);
     EMMS;
+
 {$IFDEF CHANGED_IN_PIXELS}
   end;
   Changed(MakeRect(X, Y, X + 1, Y + 1));
@@ -3536,17 +3486,17 @@ end;
 
 procedure TCustomBitmap32.SetPixelXW(X, Y: TFixed; Value: TColor32);
 begin
-  {$IFDEF USENATIVECODE}
+{$IF Defined(PUREPASCAL) or Defined(TARGET_X64)}
   X := (X + $7F) div 256;
   Y := (Y + $7F) div 256;
-  {$ELSE}
+{$ELSE}
   asm
         ADD X, $7F
         ADD Y, $7F
         SAR X, 8
         SAR Y, 8
   end;
-  {$ENDIF}
+{$IFEND}
 
   with F256ClipRect do
     SET_T256(WrapProcHorz(X, Left, Right - 128), WrapProcVert(Y, Top, Bottom - 128), Value);
@@ -4723,6 +4673,60 @@ begin
   LineX(Fixed(X1), Fixed(Y1), Fixed(X2), Fixed(Y2), Value, L);
 end;
 
+// Note:
+// ClipLine has been copied from GR32_VectorUtils to avoid referencing that unit here
+// since that would prevent inlining in GR32_VectorUtils due to
+// H2456 Inline function '%s' has not been expanded because contained unit '%s' uses compiling unit '%s'
+function ClipLine(var X1, Y1, X2, Y2: Integer; MinX, MinY, MaxX, MaxY: Integer): Boolean;
+var
+  C1, C2: Integer;
+  V: Integer;
+begin
+  { Get edge codes }
+  C1 := Ord(X1 < MinX) + Ord(X1 > MaxX) shl 1 + Ord(Y1 < MinY) shl 2 + Ord(Y1 > MaxY) shl 3;
+  C2 := Ord(X2 < MinX) + Ord(X2 > MaxX) shl 1 + Ord(Y2 < MinY) shl 2 + Ord(Y2 > MaxY) shl 3;
+
+  if ((C1 and C2) = 0) and ((C1 or C2) <> 0) then
+  begin
+    if (C1 and 12) <> 0 then
+    begin
+      if C1 < 8 then V := MinY else V := MaxY;
+      Inc(X1, MulDiv(V - Y1, X2 - X1, Y2 - Y1));
+      Y1 := V;
+      C1 := Ord(X1 < MinX) + Ord(X1 > MaxX) shl 1;
+    end;
+
+    if (C2 and 12) <> 0 then
+    begin
+      if C2 < 8 then V := MinY else V := MaxY;
+      Inc(X2, MulDiv(V - Y2, X2 - X1, Y2 - Y1));
+      Y2 := V;
+      C2 := Ord(X2 < MinX) + Ord(X2 > MaxX) shl 1;
+    end;
+
+    if ((C1 and C2) = 0) and ((C1 or C2) <> 0) then
+    begin
+      if C1 <> 0 then
+      begin
+        if C1 = 1 then V := MinX else V := MaxX;
+        Inc(Y1, MulDiv(V - X1, Y2 - Y1, X2 - X1));
+        X1 := V;
+        C1 := 0;
+      end;
+
+      if C2 <> 0 then
+      begin
+        if C2 = 1 then V := MinX else V := MaxX;
+        Inc(Y2, MulDiv(V - X2, Y2 - Y1, X2 - X1));
+        X2 := V;
+        C2 := 0;
+      end;
+    end;
+  end;
+
+  Result := (C1 or C2) = 0;
+end;
+
 procedure TCustomBitmap32.LineXS(X1, Y1, X2, Y2: TFixed; Value: TColor32; L: Boolean);
 var
   n, i: Integer;
@@ -5725,8 +5729,6 @@ function TCustomBitmap32.LoadFromDIBStream(Stream: TStream; Size: Int64): boolea
   end;
 
 type
-  TInfoHeaderVersion = (InfoHeaderVersion1, InfoHeaderVersion2, InfoHeaderVersion3, InfoHeaderVersion4, InfoHeaderVersion5);
-
   TChannelMask = record
     Shift: integer;
     Mask: DWORD;
@@ -5745,6 +5747,7 @@ var
   Channel: TColor32Component;
   Value, NewValue: DWORD;
   Padding: integer;
+  DataSize: integer;
   ScanlineRow: PColor32Array;
 const
 {$IFNDEF RGBA_FORMAT}
@@ -5796,10 +5799,6 @@ begin
   if (Stream.Read(BitmapHeader.InfoHeader.biWidth, ChunkSize) <> ChunkSize) then
     exit;
 
-  // We only support BI_RGB and BI_BITFIELDS compression
-  if (BitmapHeader.InfoHeader.biCompression <> BI_RGB) and (BitmapHeader.InfoHeader.biCompression <> BI_BITFIELDS) then
-    exit;
-
   // We only support 24-bit and 32-bit bitmaps
   if not (BitmapHeader.InfoHeader.biBitCount in [24, 32]) then
     exit;
@@ -5812,16 +5811,45 @@ begin
   if (BitmapHeader.InfoHeader.biWidth < 0) then
     BitmapHeader.InfoHeader.biWidth := -BitmapHeader.InfoHeader.biWidth;
 
-  // Validate compression and fetch RGBA masks
+  // Pad input rows to 32 bits
+  Padding := (SizeOf(DWORD) - (((BitmapHeader.InfoHeader.biBitCount shr 3) * BitmapHeader.InfoHeader.biWidth) and (SizeOf(DWORD)-1))) and (SizeOf(DWORD)-1);
+  DataSize := ((BitmapHeader.InfoHeader.biBitCount shr 3) * BitmapHeader.InfoHeader.biWidth + Padding) * Abs(BitmapHeader.InfoHeader.biHeight);
+  Dec(Size, DataSize);
+
+  if (BitmapHeader.InfoHeader.biCompression = BI_RGB) then
+  begin
+    // Skip color table so we're ready to read the pixel data.
+    // Note: We ignore the pixel offset stored in the header since this
+    // value is often incorrect.
+    if (BitmapHeader.InfoHeader.biClrUsed > 0) then
+    begin
+      Dec(Size, BitmapHeader.InfoHeader.biClrUsed * SizeOf(DWORD));
+      if (Size < 0) then
+        exit;
+      Stream.Seek(BitmapHeader.InfoHeader.biClrUsed * SizeOf(DWORD), soCurrent);
+    end;
+  end else
   if (BitmapHeader.InfoHeader.biCompression = BI_BITFIELDS) then
   begin
-    // reject invalid 24-bit bitfields
+    // BI_BITFIELDS is only valid for 16 and 32 bit count
     if BitmapHeader.InfoHeader.biBitCount = 24 then
       exit;
 
-    // For version > v1 the RGB color mask is part of the header so it has already
-    // been read as part of the header. For version = v1 it is stored just after
-    // the header, before the color table.
+    // For versions > v1 the header contains a color mask.
+    // For BI_BITFIELDS the header is additionally followed by a color table with 3
+    // values that can also be interpreted as a color mask.
+    // Because the BI_BITFIELDS layout has been so poorly documented different
+    // interpretations of it has lead to some implementations including the color
+    // table and some excluding it.
+    // This is true even within Windows and its utilities. In particular the Windows
+    // clipboard's handling of CF_DIBV5 appears to produce both variations depending on
+    // various circumstances.
+    //
+    // Since Windows seems able to work around the two different variations we'll try to
+    // do that too; If there's exactly 12 bytes missing when we're about to read the
+    // color table, then we simply skip reading it.
+
+    // For version 1 we always need to get the mask from the color table.
     if (InfoHeaderVersion = InfoHeaderVersion1) then
     begin
       // Read the RGB mask into the v2 header RGB mask fields
@@ -5829,8 +5857,31 @@ begin
       Dec(Size, ChunkSize);
       if (Size < 0) then
         exit;
+
       if (Stream.Read(BitmapHeader.V2Header.bV2RedMask, ChunkSize) <> ChunkSize) then
         exit;
+    end else
+    begin
+      // Read the color table if it's there.
+
+      // Work around BI_BITFIELDS DIBs that lack the color table after the header;
+      // If there's exactly 12 bytes missing then we assume that these are the missing
+      // color table and ignore it.
+      ChunkSize := 3 * SizeOf(DWORD);
+      if (Size >= ChunkSize) then
+      begin
+        Dec(Size, ChunkSize);
+        // The color table is there but do we need to actually read it?
+        // If the header color masks contains values then we don't need the values in
+        // the color table so we just skip past them. Otherwise we read them into the
+        // header color mask fields.
+        if (BitmapHeader.V2Header.bV2RedMask = 0) and (BitmapHeader.V2Header.bV2GreenMask = 0) and (BitmapHeader.V2Header.bV2BlueMask = 0) then
+        begin
+          if (Stream.Read(BitmapHeader.V2Header.bV2RedMask, ChunkSize) <> ChunkSize) then
+            exit;
+        end else
+          Stream.Seek(ChunkSize, soFromCurrent);
+      end;
     end;
 
     // Check if RGBA mask is present and values are valid
@@ -5872,27 +5923,15 @@ begin
         (BitmapHeader.V3Header.bV3AlphaMask = Masks[ccAlpha]) then
         BitmapHeader.InfoHeader.biCompression := BI_RGB;
     end;
-  end;
-
-  // Skip color table so we're ready to read the pixel data
-  // Note: We ignore the pixel offset stored in the header since this
-  // value is often incorrect.
-  if (BitmapHeader.InfoHeader.biClrUsed > 0) then
-  begin
-    Dec(Size, BitmapHeader.InfoHeader.biClrUsed * SizeOf(DWORD));
-    if (Size < 0) then
-      exit;
-    Stream.Seek(BitmapHeader.InfoHeader.biClrUsed * SizeOf(DWORD), soCurrent);
-  end;
-
-  // Pad input rows to 32 bits
-  Padding := (SizeOf(DWORD) - (((BitmapHeader.InfoHeader.biBitCount shr 3) * BitmapHeader.InfoHeader.biWidth) and (SizeOf(DWORD)-1))) and (SizeOf(DWORD)-1);
+  end else
+    // We only support BI_RGB and BI_BITFIELDS compression
+    exit;
 
   // Make sure there's enough data left for the pixels
-  Dec(Size, ((BitmapHeader.InfoHeader.biBitCount shr 3) * BitmapHeader.InfoHeader.biWidth + Padding) * Abs(BitmapHeader.InfoHeader.biHeight));
   if (Size < 0) then
     exit;
 
+  // Set bitmap size and allocate pixel data so we can read into it
   SetSize(BitmapHeader.InfoHeader.biWidth, Abs(BitmapHeader.InfoHeader.biHeight));
 
   // Check whether the bitmap is saved top-down or bottom-up:
@@ -5909,6 +5948,7 @@ begin
     Row := 0;
     DeltaRow := 1;
   end;
+
 
   if (BitmapHeader.InfoHeader.biCompression = BI_RGB) then
   begin
@@ -5942,8 +5982,7 @@ begin
             ChunkSize := Width * SizeOf(DWORD);
             for i := Height - 1 downto 0 do
               Stream.ReadBuffer(Scanline[i]^, ChunkSize);
-          end
-          else
+          end else
             // Bitmap is stored top-down: Read all rows in one go
             Stream.ReadBuffer(Bits^, Width * Height * SizeOf(DWORD))
         end;
@@ -5953,9 +5992,12 @@ begin
       EnsureAlpha;
 
 {$IFDEF RGBA_FORMAT}
-    // swap R and B channels
-    SwapRB;
-{$ENDIF RGBA_FORMAT}
+    // BMP stores pixels in ABGR order but we need them in ARGB order.
+    // Swap R and B channels
+    for i := 0 to FHeight * FWidth - 1 do
+      SwapRedBlueMem(FBits[i]);
+{$ENDIF}
+
   end else
   begin
     Assert(Padding = 0);
@@ -6003,6 +6045,10 @@ begin
       Inc(Row, DeltaRow);
     end;
 
+{$IFDEF RGBA_FORMAT}
+    // For BI_BITFIELDS we do not need to swap the R and B channels at the end because
+    // we have already done it by adjusting the Masks and ChannelToIndex arrays.
+{$ENDIF}
   end;
 
   Result := True;
@@ -6011,98 +6057,181 @@ end;
 procedure TCustomBitmap32.LoadFromStream(Stream: TStream);
 var
   SavePos: Int64;
-{$ifdef LOADFROMSTREAM}
-  P: TPicture;
-{$else LOADFROMSTREAM}
-  B: TBitmap;
-{$endif LOADFROMSTREAM}
 begin
   SavePos := Stream.Position;
 
-  if (not LoadFromBMPStream(Stream, Stream.Size)) then
+  if (not ImageFormatManager.Readers.LoadFromStream(Self, Stream)) then
   begin
     Stream.Position := SavePos;
-
-{$ifdef LOADFROMSTREAM}
-
-    // TPicture.LoadFromStream requires TGraphic.CanLoadFromStream.
-    // Introduced in Delphi 10.2 and present in FPC as well
-    // See issue #145
-    P := TPicture.Create;
-    try
-      P.LoadFromStream(Stream);
-      Assign(P);
-    finally
-      P.Free;
-    end;
-
-{$else LOADFROMSTREAM}
-
-    // Fallback to TBitmap for Delphi 10.1 and older
-    B := TBitmap.Create;
-    try
-      B.LoadFromStream(Stream);
-      Assign(B);
-    finally
-      B.Free;
-    end;
-
-{$endif LOADFROMSTREAM}
+    raise Exception.Create(sUnknownImageFormat);
   end;
 
   Changed;
 end;
 
-procedure TCustomBitmap32.SaveToStream(Stream: TStream; SaveTopDown: Boolean = False);
-var
-  FileHeader: TBitmapFileHeader;
-  BitmapSize: Integer;
+procedure TCustomBitmap32.SaveToStream(Stream: TStream; SaveTopDown: Boolean);
 begin
-  BitmapSize := Width * Height * SizeOf(DWORD);
-
-  FileHeader.bfType := $4D42; // Magic bytes for Windows Bitmap
-  FileHeader.bfSize := BitmapSize + SizeOf(TBitmapFileHeader) + SizeOf(TBitmapInfoHeader); // Size of file
-  FileHeader.bfReserved1 := 0;
-  FileHeader.bfReserved2 := 0;
-  // The offset, in bytes, from the beginning of the BITMAPFILEHEADER structure to the bitmap bits.
-  FileHeader.bfOffBits := SizeOf(TBitmapFileHeader) + SizeOf(TBitmapInfoHeader); // = 14 + 40
-
-  Stream.WriteBuffer(FileHeader, SizeOf(FileHeader));
-
-  SaveToDIBStream(Stream, SaveTopDown);
+  SaveToStream(Stream, SaveTopDown, DefaultBitmapHeaderVersion);
 end;
 
-procedure TCustomBitmap32.SaveToDIBStream(Stream: TStream; SaveTopDown: Boolean);
+procedure TCustomBitmap32.SaveToStream(Stream: TStream; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion);
+begin
+  SaveToStream(Stream, SaveTopDown, InfoHeaderVersion, DefaultBitmapIncludeColorTable);
+end;
+
+procedure TCustomBitmap32.SaveToStream(Stream: TStream; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion; IncludeColorTable: boolean);
 var
-  InfoHeader: TBitmapInfoHeader;
+  StartPos: Int64;
+  SavePos: Int64;
+  FileHeader: TBitmapFileHeader;
+begin
+  StartPos := Stream.Position;
+
+  // Skip past file header. We will write it once the DIB has been written.
+  Stream.Seek(SizeOf(TBitmapFileHeader), soFromCurrent);
+
+  // Save the DIB
+  SaveToDIBStream(Stream, SaveTopDown, InfoHeaderVersion, IncludeColorTable);
+  SavePos := Stream.Position;
+
+  // Calculate size, store in header, rewind and write the file header
+  FileHeader.bfType := $4D42; // Magic bytes for Windows Bitmap: 'BM'
+  FileHeader.bfSize := Stream.Position - StartPos;
+  FileHeader.bfReserved1 := 0;
+  FileHeader.bfReserved2 := 0;
+  // Most application doesn't care about the value in bfOffBits but some do and
+  // for those (e.g. Gimp, MS Paint) it appears to be important that we store a
+  // correct value. Without a correct value the applications are, for some reason,
+  // unable to handle BI_BITFIELDS BMPs with a color table.
+  FileHeader.bfOffBits := SizeOf(TBitmapFileHeader);
+  case InfoHeaderVersion of
+    InfoHeaderVersion1: Inc(FileHeader.bfOffBits, SizeOf(TBitmapInfoHeader));// 40
+    InfoHeaderVersion2: Inc(FileHeader.bfOffBits, SizeOf(TBitmapV2Header));  // 52
+    InfoHeaderVersion3: Inc(FileHeader.bfOffBits, SizeOf(TBitmapV3Header));  // 56
+    InfoHeaderVersion4: Inc(FileHeader.bfOffBits, SizeOf(TBitmapV4Header));  // 108
+    InfoHeaderVersion5: Inc(FileHeader.bfOffBits, SizeOf(TBitmapV5Header));  // 124
+  end;
+  if (IncludeColorTable) and (InfoHeaderVersion >= InfoHeaderVersion3) then
+    Inc(FileHeader.bfOffBits, 3*SizeOf(DWORD));
+
+  Stream.Position := StartPos;
+  Stream.WriteBuffer(FileHeader, SizeOf(FileHeader));
+
+  Stream.Position := SavePos;
+end;
+
+procedure TCustomBitmap32.SaveToDIBStream(Stream: TStream; SaveTopDown: Boolean; IncludeColorTable: boolean);
+begin
+  SaveToDIBStream(Stream, SaveTopDown, DefaultBitmapHeaderVersion, IncludeColorTable);
+end;
+
+procedure TCustomBitmap32.SaveToDIBStream(Stream: TStream; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion; IncludeColorTable: boolean);
+type
+  TDIBHeader = packed record
+  case TInfoHeaderVersion of
+    InfoHeaderVersion1: (InfoHeader: TBitmapInfoHeader);        // 40
+    InfoHeaderVersion2: (V2Header: TBitmapV2Header);            // 52
+    InfoHeaderVersion3: (V3Header: TBitmapV3Header);            // 56
+    InfoHeaderVersion4: (V4Header: TBitmapV4Header);            // 108
+    InfoHeaderVersion5: (V5Header: TBitmapV5Header);            // 124
+  end;
+
+const
+  LCS_sRGB = $73524742; // 'sRGB'
+{$IFDEF FPC}
+  LCS_GM_IMAGES = 4;
+{$ENDIF}
+
+var
+  Header: TDIBHeader;
   i: Integer;
   W: Integer;
+{$ifdef RGBA_FORMAT}
+  Colors: array of TColor32;
+  Line: PColor32Array;
+{$endif RGBA_FORMAT}
 begin
-  InfoHeader.biSize := SizeOf(TBitmapInfoHeader); // = 40
-  InfoHeader.biWidth := Width;
+  Header := Default(TDIBHeader);
+
+  // Determine info header size based on header version.
+  // Note: Formats lower than InfoHeaderVersion3 doesn't formally
+  // support alpha but that doesn't mean that we can't store the alpha
+  // anyway.
+  case InfoHeaderVersion of
+    InfoHeaderVersion1: Header.InfoHeader.biSize := SizeOf(TBitmapInfoHeader);// 40
+    InfoHeaderVersion2: Header.InfoHeader.biSize := SizeOf(TBitmapV2Header);  // 52
+    InfoHeaderVersion3: Header.InfoHeader.biSize := SizeOf(TBitmapV3Header);  // 56
+    InfoHeaderVersion4: Header.InfoHeader.biSize := SizeOf(TBitmapV4Header);  // 108
+    InfoHeaderVersion5: Header.InfoHeader.biSize := SizeOf(TBitmapV5Header);  // 124
+  else
+    raise Exception.Create('Invalid DIB header version');
+  end;
+
+  Header.InfoHeader.biWidth := Width;
 
   if SaveTopDown then
-    InfoHeader.biHeight := -Height
+    Header.InfoHeader.biHeight := -Height
   else
-    InfoHeader.biHeight := Height;
+    Header.InfoHeader.biHeight := Height;
 
-  InfoHeader.biPlanes := 1;
-  InfoHeader.biBitCount := 32;
-  InfoHeader.biCompression := BI_RGB;
-  InfoHeader.biSizeImage := Width * Height * SizeOf(DWORD);
-  InfoHeader.biXPelsPerMeter := 0;
-  InfoHeader.biYPelsPerMeter := 0;
-  InfoHeader.biClrUsed := 0;
-  InfoHeader.biClrImportant := 0;
+  Header.InfoHeader.biPlanes := 1;
+  Header.InfoHeader.biBitCount := 32; // This implementation only support writing 32-bit format
+  Header.InfoHeader.biCompression := BI_RGB; // BI_RGB or BI_BITFIELDS
+  Header.InfoHeader.biSizeImage := Width * Height * SizeOf(DWORD);
+  Header.InfoHeader.biXPelsPerMeter := 0;
+  Header.InfoHeader.biYPelsPerMeter := 0;
+  Header.InfoHeader.biClrUsed := 0; // No palette
+  Header.InfoHeader.biClrImportant := 0;
 
-  Stream.WriteBuffer(InfoHeader, SizeOf(InfoHeader));
+  if (InfoHeaderVersion >= InfoHeaderVersion3) then
+  begin
+    // First header version to formally support Alpha. But this requires that we use
+    // BI_BITFIELDS compression.
+    // Note though that Windows Explorer only recongnizes alpha in v4 and v5.
+    Header.InfoHeader.biCompression := BI_BITFIELDS; // Switch from BI_RGB
+    Header.V3Header.bV3AlphaMask := $FF000000;
+  end;
+
+  if (Header.InfoHeader.biCompression = BI_BITFIELDS) then
+  begin
+    // We only support the bit masks that correspond directly to the ABGR format.
+    // Also note that WIC, among others, ignores the alpha if we use a different mask.
+    Header.V2Header.bV2RedMask := $00FF0000;
+    Header.V2Header.bV2GreenMask := $0000FF00;
+    Header.V2Header.bV2BlueMask := $000000FF;
+  end;
+
+  if (InfoHeaderVersion >= InfoHeaderVersion4) then
+    Header.V4Header.bV4CSType := LCS_sRGB;
+
+  if (InfoHeaderVersion >= InfoHeaderVersion5) then
+    Header.V5Header.bV5Intent := LCS_GM_IMAGES;
+
+  Stream.WriteBuffer(Header, Header.InfoHeader.biSize);
+
+  // Write the color table.
+  // This just contains the same values as first three fields of the header color mask.
+  //
+  // Note that by default we never write the color table.
+  // Empirical evidence has shown that, for most consistent results, neither bitmap files
+  // (i.e. BMPs) nor DIBs (such as clipboard data) should contain the color table.
+  //
+  // The current MSDN documentation state that the color tables must always be present
+  // for BI_BITFIELDS. However investigation of the relevant source code has revealed
+  // that different parts of Windows has widely different implementations of the format;
+  // The clipboard appears to always expect a color table while parts of GDI expect one
+  // for v3 but not for v4 and v5 DIBs - or vice versa.
+  //
+  if (IncludeColorTable) and (Header.InfoHeader.biCompression = BI_BITFIELDS) then
+    Stream.WriteBuffer(Header.V2Header.bV2RedMask, 3*SizeOf(DWORD)); // Actually, 3*SizeOf(TRGBQuad)
 
   // Pixel array
+{$IFNDEF RGBA_FORMAT}
   if SaveTopDown then
   begin
     // NOTE: We can save the whole buffer in one run because
     // we do not support scanline strides (yet).
-    Stream.WriteBuffer(Bits^, InfoHeader.biSizeImage);
+    Stream.WriteBuffer(Bits^, Header.InfoHeader.biSizeImage);
   end
   else
   begin
@@ -6110,113 +6239,134 @@ begin
     for i := Height - 1 downto 0 do
       Stream.WriteBuffer(ScanLine[i]^, W);
   end;
+{$ELSE RGBA_FORMAT}
+  // Bits are in RGBA format but we need to write BGRA.
+  SetLength(Colors, Width);
+  for i := 0 to Height-1 do
+  begin
+    if SaveTopDown then
+      Line := ScanLine[i]
+    else
+      Line := ScanLine[Height-i-1];
+    for W := 0 to Width-1 do
+      Colors[W] := SwapRedBlue(Line[W]);
+    Stream.WriteBuffer(Colors[0], Width*SizeOf(DWORD));
+  end;
+{$ENDIF RGBA_FORMAT}
 end;
 
 procedure TCustomBitmap32.LoadFromFile(const FileName: string);
 var
   FileStream: TFileStream;
-{$ifndef LOADFROMSTREAM}
-  P: TPicture;
-{$endif LOADFROMSTREAM}
 begin
+{$if (not defined(FPC)) and (CompilerVersion >= 31.0)} // TBufferedFileStream was introduced in Delphi 10.1
+  FileStream := TBufferedFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+{$else}
   FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+{$ifend}
   try
 
-{$ifdef LOADFROMSTREAM}
-
-    LoadFromStream(FileStream);
-
-{$else LOADFROMSTREAM}
-
-    if (LoadFromBMPStream(FileStream, FileStream.Size)) then
+    if (ImageFormatManager.Readers.LoadFromStream(Self, FileStream, FileName)) then
+    begin
+      Changed;
+      exit;
+    end else
+    if (ImageFormatManager.Readers.LoadFromStream(Self, FileStream)) then
     begin
       Changed;
       exit;
     end;
 
-{$endif LOADFROMSTREAM}
-
   finally
     FileStream.Free;
   end;
 
-{$ifndef LOADFROMSTREAM}
-  // Fallback to determing file format based on file type for Delphi 10.1. and older
-  // See issue #145
-  P := TPicture.Create;
-  try
-    P.LoadFromFile(FileName);
-    Assign(P);
-  finally
-    P.Free;
+  if (ImageFormatManager.Readers.LoadFromFile(Self, FileName)) then
+  begin
+    Changed;
+    exit;
   end;
-{$endif LOADFROMSTREAM}
+
+  raise Exception.Create(sUnknownImageFormat);
 end;
 
-procedure TCustomBitmap32.SaveToFile(const FileName: string; SaveTopDown: Boolean = False);
+procedure TCustomBitmap32.SaveToFile(const FileName: string);
+var
+  Extension: string;
+  Writer: IImageFormatWriter;
+  FileStream: TFileStream;
+begin
+  Extension := Copy(ExtractFileExt(FileName), 2, MaxInt);
+
+  Writer := ImageFormatManager.Writers.FindWriter(Extension);
+
+  if (Writer <> nil) then
+  begin
+    FileStream := TFileStream.Create(FileName, fmCreate);
+    try
+      Writer.SaveToStream(Self, FileStream);
+    finally
+      FileStream.Free;
+    end;
+  end else
+    SaveToFile(FileName, False);
+end;
+
+procedure TCustomBitmap32.SaveToFile(const FileName: string; SaveTopDown: Boolean);
+begin
+  SaveToFile(FileName, SaveTopDown, DefaultBitmapHeaderVersion);
+end;
+
+procedure TCustomBitmap32.SaveToFile(const FileName: string; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion);
+begin
+  SaveToFile(FileName, SaveTopDown, InfoHeaderVersion, DefaultBitmapIncludeColorTable);
+end;
+
+procedure TCustomBitmap32.SaveToFile(const FileName: string; SaveTopDown: Boolean; InfoHeaderVersion: TInfoHeaderVersion; IncludeColorTable: boolean);
 var
   FileStream: TFileStream;
 begin
+  // The purpose of this extra overload is primarily to allow the unit test to generate BMPs with/without a color table
   FileStream := TFileStream.Create(Filename, fmCreate);
   try
-    SaveToStream(FileStream, SaveTopDown);
+    SaveToStream(FileStream, SaveTopDown, InfoHeaderVersion, IncludeColorTable);
   finally
     FileStream.Free;
   end;
 end;
 
-procedure TCustomBitmap32.LoadFromResourceID(Instance: THandle; ResID: Integer);
+procedure TCustomBitmap32.LoadFromResourceID(Instance: THandle; ResID: Integer; ResType: TResourceType);
 var
   Stream: TStream;
-  B: TBitmap;
 begin
-  Stream := TResourceStream.CreateFromID(Instance, ResID, RT_BITMAP);
+  Stream := TResourceStream.CreateFromID(Instance, ResID, ResType);
   try
-    if (LoadFromDIBStream(Stream, Stream.Size)) then
-    begin
-      Changed;
-      exit;
-    end;
+
+    if (not ImageFormatManager.Readers.LoadFromResource(Self, ResType, Stream)) then
+      raise Exception.Create(sUnknownImageFormat);
+
+    Changed;
+
   finally
     Stream.Free;
   end;
-
-  // Fall back to TBitmap
-  B := TBitmap.Create;
-  try
-    B.LoadFromResourceID(Instance, ResID);
-    Assign(B);
-  finally
-    B.Free;
-  end;
-  Changed;
 end;
 
-procedure TCustomBitmap32.LoadFromResourceName(Instance: THandle; const ResName: string);
+procedure TCustomBitmap32.LoadFromResourceName(Instance: THandle; const ResName: string; ResType: TResourceType);
 var
   Stream: TStream;
-  B: TBitmap;
 begin
-  Stream := TResourceStream.Create(Instance, ResName, RT_BITMAP);
+  Stream := TResourceStream.Create(Instance, ResName, ResType);
   try
-    if (LoadFromDIBStream(Stream, Stream.Size)) then
-    begin
-      Changed;
-      exit;
-    end;
+
+    if (not ImageFormatManager.Readers.LoadFromResource(Self, ResType, Stream)) then
+      raise Exception.Create(sUnknownImageFormat);
+
+    Changed;
+
   finally
     Stream.Free;
   end;
-
-  // Fall back to TBitmap
-  B := TBitmap.Create;
-  try
-    B.LoadFromResourceName(Instance, ResName);
-    Assign(B);
-  finally
-    B.Free;
-  end;
-  Changed;
 end;
 
 function TCustomBitmap32.Equal(B: TCustomBitmap32): Boolean;
@@ -6324,33 +6474,6 @@ begin
   end;
 end;
 
-{$IFDEF DEPRECATEDMODE}
-procedure TCustomBitmap32.SetStretchFilter(Value: TStretchFilter);
-begin
-  if FStretchFilter <> Value then
-  begin
-    FStretchFilter := Value;
-
-    case FStretchFilter of
-      sfNearest: TNearestResampler.Create(Self);
-      sfDraft:   TDraftResampler.Create(Self);
-      sfLinear:  TLinearResampler.Create(Self);
-    else
-      TKernelResampler.Create(Self);
-      with FResampler as TKernelResampler do
-        case FStretchFilter of
-          sfCosine: Kernel := TCosineKernel.Create;
-          sfSpline: Kernel := TSplineKernel.Create;
-          sfLanczos: Kernel := TLanczosKernel.Create;
-          sfMitchell: Kernel := TMitchellKernel.Create;
-        end;
-    end;
-
-    Changed;
-  end;
-end;
-{$ENDIF}
-
 procedure TCustomBitmap32.Roll(Dx, Dy: Integer; FillBack: Boolean; FillColor: TColor32);
 var
   Shift, L: Integer;
@@ -6435,10 +6558,10 @@ begin
   end
   else
   begin
+    Dst.BeginUpdate;
     { Flip to Dst }
     if not FMeasuringMode then
     begin
-      Dst.BeginUpdate;
       Dst.SetSize(W, Height);
       P1 := PColor32(Bits);
       P2 := PColor32(Dst.Bits);
@@ -6453,9 +6576,9 @@ begin
         end;
         Inc(P2, W shl 1);
       end;
-      Dst.EndUpdate;
     end;
     Dst.Changed;
+    Dst.EndUpdate;
   end;
 end;
 
@@ -6509,42 +6632,44 @@ var
 begin
   if not FMeasuringMode then
   begin
-    if Dst = nil then
+    if (Dst = nil) or (Dst = Self) then
     begin
       Tmp := TCustomBitmap32.Create; // TODO : Use TMemoryBackend
       Dst := Tmp;
-    end
-    else
-    begin
+    end else
       Tmp := nil;
-      Dst.BeginUpdate;
-    end;
+    try
 
-    Dst.SetSize(Height, Width);
-    I := 0;
-    for Y := 0 to Height - 1 do
-    begin
-      J := Height - 1 - Y;
-      for X := 0 to Width - 1 do
+      Dst.BeginUpdate;
+      try
+
+        Dst.SetSize(Height, Width);
+        I := 0;
+        for Y := 0 to Height - 1 do
+        begin
+          J := Height - 1 - Y;
+          for X := 0 to Width - 1 do
+          begin
+            Dst.Bits[J] := Bits[I];
+            Inc(I);
+            Inc(J, Height);
+          end;
+        end;
+
+        Dst.Changed;
+      finally
+        Dst.EndUpdate;
+      end;
+
+    finally
+      if (Tmp <> nil) then
       begin
-        Dst.Bits[J] := Bits[I];
-        Inc(I);
-        Inc(J, Height);
+        Tmp.CopyMapTo(Self);
+        Tmp.Free;
       end;
     end;
-
-    if Tmp <> nil then
-    begin
-      Tmp.CopyMapTo(Self);
-      Tmp.Free;
-    end
-    else
-    begin
-      Dst.EndUpdate;
-      Dst.Changed;
-    end;
   end else
-  if Dst = nil then
+  if (Dst = nil) or (Dst = Self) then
     Changed
   else
     Dst.Changed;
@@ -6555,7 +6680,7 @@ var
   I, I2: Integer;
   Tmp: TColor32;
 begin
-  if Dst <> nil then
+  if (Dst <> nil) and (Dst <> Self) then
   begin
     if not FMeasuringMode then
     begin
@@ -6593,43 +6718,45 @@ var
 begin
   if not FMeasuringMode then
   begin
-    if Dst = nil then
+    if (Dst = nil) or (Dst = Self) then
     begin
       Tmp := TCustomBitmap32.Create; { TODO : Revise creating of temporary bitmaps here... }
        // TODO : Use TMemoryBackend
       Dst := Tmp;
-    end
-    else
-    begin
+    end else
       Tmp := nil;
-      Dst.BeginUpdate;
-    end;
+    try
 
-    Dst.SetSize(Height, Width);
-    I := 0;
-    for Y := 0 to Height - 1 do
-    begin
-      J := (Width - 1) * Height + Y;
-      for X := 0 to Width - 1 do
+      Dst.BeginUpdate;
+      try
+
+        Dst.SetSize(Height, Width);
+        I := 0;
+        for Y := 0 to Height - 1 do
+        begin
+          J := (Width - 1) * Height + Y;
+          for X := 0 to Width - 1 do
+          begin
+            Dst.Bits[J] := Bits[I];
+            Inc(I);
+            Dec(J, Height);
+          end;
+        end;
+
+        Dst.Changed;
+      finally
+        Dst.EndUpdate;
+      end;
+
+    finally
+      if (Tmp <> nil) then
       begin
-        Dst.Bits[J] := Bits[I];
-        Inc(I);
-        Dec(J, Height);
+        Tmp.CopyMapTo(Self);
+        Tmp.Free;
       end;
     end;
-
-    if Tmp <> nil then
-    begin
-      Tmp.CopyMapTo(Self);
-      Tmp.Free;
-    end
-    else
-    begin
-      Dst.EndUpdate;
-      Dst.Changed;
-    end;
   end else
-  if Dst = nil then
+  if (Dst = nil) or (Dst = Self) then
     Changed
   else
     Dst.Changed;
@@ -6680,7 +6807,7 @@ end;
 
 procedure TCustomBitmap32.Changed;
 begin
-  if ((FUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) then
+  if ((LockUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) then
     FOnAreaChanged(Self, BoundsRect, AREAINFO_RECT);
 
   if not FMeasuringMode then
@@ -6689,20 +6816,19 @@ end;
 
 procedure TCustomBitmap32.Changed(const Area: TRect; const Info: Cardinal);
 begin
-  if ((FUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) then
+  if ((LockUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) then
     FOnAreaChanged(Self, Area, Info);
 
   if not FMeasuringMode then
     inherited Changed;
 end;
 
-procedure TCustomBitmap32.SetResampler(Resampler: TCustomResampler);
+procedure TCustomBitmap32.SetResampler(AResampler: TCustomResampler);
 begin
-  if Assigned(Resampler) and (FResampler <> Resampler) then
+  if (AResampler <> nil) and (FResampler <> AResampler) then
   begin
-    if Assigned(FResampler) then
-      FResampler.Free;
-    FResampler := Resampler;
+    FResampler.Free;
+    FResampler := AResampler;
     Changed;
   end;
 end;
@@ -6716,10 +6842,10 @@ procedure TCustomBitmap32.SetResamplerClassName(const Value: string);
 var
   ResamplerClass: TCustomResamplerClass;
 begin
-  if (Value <> '') and (FResampler.ClassName <> Value) and Assigned(ResamplerList) then
+  if (Value <> '') and (FResampler.ClassName <> Value) and (ResamplerList <> nil) then
   begin
     ResamplerClass := TCustomResamplerClass(ResamplerList.Find(Value));
-    if Assigned(ResamplerClass) then
+    if (ResamplerClass <> nil) then
       ResamplerClass.Create(Self);
   end;
 end;
@@ -6782,22 +6908,22 @@ end;
 
 function TBitmap32.GetCanvas: TCanvas;
 begin
-  Result := (FBackend as ICanvasSupport).Canvas;
+  Result := (Backend as ICanvasSupport).Canvas;
 end;
 
 function TBitmap32.GetBitmapInfo: TBitmapInfo;
 begin
-  Result := (FBackend as IBitmapContextSupport).BitmapInfo;
+  Result := (Backend as IBitmapContextSupport).BitmapInfo;
 end;
 
 function TBitmap32.GetHandle: HBITMAP;
 begin
-  Result := (FBackend as IBitmapContextSupport).BitmapHandle;
+  Result := (Backend as IBitmapContextSupport).BitmapHandle;
 end;
 
 function TBitmap32.GetHDC: HDC;
 begin
-  Result := (FBackend as IDeviceContextSupport).Handle;
+  Result := (Backend as IDeviceContextSupport).Handle;
 end;
 
 class function TBitmap32.GetPlatformBackendClass: TCustomBackendClass;
@@ -6811,20 +6937,20 @@ end;
 
 function TBitmap32.GetFont: TFont;
 begin
-  Result := (FBackend as IFontSupport).Font;
+  Result := (Backend as IFontSupport).Font;
 end;
 
-procedure TBitmap32.SetBackend(const Backend: TCustomBackend);
+procedure TBitmap32.SetBackend(const ABackend: TCustomBackend);
 var
   FontSupport: IFontSupport;
   CanvasSupport: ICanvasSupport;
 begin
-  if Assigned(Backend) and (Backend <> FBackend) then
+  if (ABackend <> nil) and (Backend <> ABackend) then
   begin
-    if Supports(Backend, IFontSupport, FontSupport) then
+    if Supports(ABackend, IFontSupport, FontSupport) then
       FontSupport.OnFontChange := FontChanged;
 
-    if Supports(Backend, ICanvasSupport, CanvasSupport) then
+    if Supports(ABackend, ICanvasSupport, CanvasSupport) then
       CanvasSupport.OnCanvasChange := CanvasChanged;
 
     inherited;
@@ -6833,7 +6959,7 @@ end;
 
 procedure TBitmap32.SetFont(Value: TFont);
 begin
-  (FBackend as IFontSupport).Font := Value;
+  (Backend as IFontSupport).Font := Value;
 end;
 
 procedure TBitmap32.HandleChanged;
@@ -6848,19 +6974,19 @@ procedure TBitmap32.Draw(const DstRect, SrcRect: TRect; hSrc: Cardinal);
 procedure TBitmap32.Draw(const DstRect, SrcRect: TRect; hSrc: HDC);
 {$ENDIF}
 begin
-  (FBackend as IDeviceContextSupport).Draw(DstRect, SrcRect, hSrc);
+  (Backend as IDeviceContextSupport).Draw(DstRect, SrcRect, hSrc);
 end;
 
 procedure TBitmap32.DrawTo(hDst: {$IFDEF BCB}Cardinal{$ELSE}HDC{$ENDIF}; DstX, DstY: Integer);
 begin
   if not Empty then
-    (FBackend as IDeviceContextSupport).DrawTo(hDst, DstX, DstY);
+    (Backend as IDeviceContextSupport).DrawTo(hDst, DstX, DstY);
 end;
 
 procedure TBitmap32.DrawTo(hDst: {$IFDEF BCB}Cardinal{$ELSE}HDC{$ENDIF}; const DstRect, SrcRect: TRect);
 begin
   if not Empty then
-    (FBackend as IDeviceContextSupport).DrawTo(hDst, DstRect, SrcRect);
+    (Backend as IDeviceContextSupport).DrawTo(hDst, DstRect, SrcRect);
 end;
 
 procedure TBitmap32.TileTo(hDst: {$IFDEF BCB}Cardinal{$ELSE}HDC{$ENDIF}; const DstRect, SrcRect: TRect; MaxTileSize: integer);
@@ -6899,7 +7025,7 @@ begin
           R := DstRect;
           OffsetRect(R, -X - DstRect.Left, -Y - DstRect.Top);
           Buffer.SetSize(ClipRect.Right, ClipRect.Bottom);
-          StretchTransfer(Buffer, R, ClipRect, Self, SrcRect, Resampler, DrawMode, FOnPixelCombine);
+          StretchTransfer(Buffer, R, ClipRect, Self, SrcRect, Resampler, DrawMode, OnPixelCombine);
 
           DeviceContextSupport.DrawTo(hDst,
             MakeRect(X + DstRect.Left, Y + DstRect.Top, X + DstRect.Left+ClipRect.Right, Y + DstRect.Top+ClipRect.Bottom),
@@ -6935,79 +7061,49 @@ end;
 
 procedure TBitmap32.UpdateFont;
 begin
-  (FBackend as IFontSupport).UpdateFont;
+  (Backend as IFontSupport).UpdateFont;
 end;
 
 // Text and Fonts //
 
 function TBitmap32.TextExtent(const Text: string): TSize;
 begin
-  Result := (FBackend as ITextSupport).TextExtent(Text);
-end;
-
-function TBitmap32.TextExtentW(const Text: Widestring): TSize;
-begin
-  Result := (FBackend as ITextSupport).TextExtentW(Text);
+  Result := (Backend as ITextSupport).TextExtent(Text);
 end;
 
 // -------------------------------------------------------------------
 
 procedure TBitmap32.Textout(X, Y: Integer; const Text: string);
 begin
-  (FBackend as ITextSupport).Textout(X, Y, Text);
-end;
-
-procedure TBitmap32.TextoutW(X, Y: Integer; const Text: Widestring);
-begin
-  (FBackend as ITextSupport).TextoutW(X, Y, Text);
+  (Backend as ITextSupport).Textout(X, Y, Text);
 end;
 
 // -------------------------------------------------------------------
 
 procedure TBitmap32.Textout(X, Y: Integer; const ClipRect: TRect; const Text: string);
 begin
-  (FBackend as ITextSupport).Textout(X, Y, ClipRect, Text);
-end;
-
-procedure TBitmap32.TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring);
-begin
-  (FBackend as ITextSupport).TextoutW(X, Y, ClipRect, Text);
+  (Backend as ITextSupport).Textout(X, Y, ClipRect, Text);
 end;
 
 // -------------------------------------------------------------------
 
 procedure TBitmap32.Textout(var DstRect: TRect; const Flags: Cardinal; const Text: string);
 begin
-  (FBackend as ITextSupport).Textout(DstRect, Flags, Text);
-end;
-
-procedure TBitmap32.TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring);
-begin
-  (FBackend as ITextSupport).TextoutW(DstRect, Flags, Text);
+  (Backend as ITextSupport).Textout(DstRect, Flags, Text);
 end;
 
 // -------------------------------------------------------------------
 
 function TBitmap32.TextHeight(const Text: string): Integer;
 begin
-  Result := (FBackend as ITextSupport).TextExtent(Text).cY;
-end;
-
-function TBitmap32.TextHeightW(const Text: Widestring): Integer;
-begin
-  Result := (FBackend as ITextSupport).TextExtentW(Text).cY;
+  Result := (Backend as ITextSupport).TextExtent(Text).cY;
 end;
 
 // -------------------------------------------------------------------
 
 function TBitmap32.TextWidth(const Text: string): Integer;
 begin
-  Result := (FBackend as ITextSupport).TextExtent(Text).cX;
-end;
-
-function TBitmap32.TextWidthW(const Text: Widestring): Integer;
-begin
-  Result := (FBackend as ITextSupport).TextExtentW(Text).cX;
+  Result := (Backend as ITextSupport).TextExtent(Text).cX;
 end;
 
 // -------------------------------------------------------------------
@@ -7017,6 +7113,7 @@ procedure SetFontAntialiasing(const Font: TFont; Quality: Cardinal);
 var
   LogFont: TLogFont;
 begin
+  LogFont := Default(TLogFont);
   with LogFont do
   begin
     lfHeight := Font.Height;
@@ -7041,9 +7138,9 @@ begin
     lfCharSet := Byte(Font.Charset);
 
     if AnsiCompareText(Font.Name, 'Default') = 0 then  // do not localize
-      StrPLCopy(lfFaceName, string(DefFontData.Name), LF_FACESIZE-1)
+      StrLCopy(lfFaceName, @DefFontData.Name[1], LF_FACESIZE-1)
     else
-      StrPLCopy(lfFaceName, Font.Name, LF_FACESIZE-1);
+      StrLCopy(lfFaceName, @Font.Name[1], LF_FACESIZE-1);
 
     lfQuality := Quality;
 
@@ -7066,7 +7163,7 @@ begin
 end;
 {$ENDIF}
 
-procedure TextBlueToAlpha(const B: TCustomBitmap32; const Color: TColor32);
+procedure TextBlueToAlpha(const B: TCustomBitmap32; Color: TColor32);
 (*
 asm
     PUSH    EDI
@@ -7086,19 +7183,16 @@ end;
 var
   I: Integer;
   P: PColor32;
-  C: TColor32;
 begin
   // convert blue channel to alpha and fill the color
+  Color := Color and $00FFFFFF;
   P := @B.Bits[0];
   for I := 0 to B.Width * B.Height - 1 do
   begin
-    C := P^;
-    if C <> 0 then
-    begin
-      C := P^ shl 24; // transfer blue channel to alpha
-      C := C + Color;
-      P^ := C;
-    end;
+    if P^ <> 0 then
+        P^ := ((P^ and $FF) shl 24) or Color
+    else
+      P^ := 0;
     Inc(P);
   end;
 end;
@@ -7139,95 +7233,18 @@ procedure TBitmap32.RenderText(X, Y: Integer; const Text: string; AALevel: Integ
 var
   B, B2: TBitmap32;
   Sz: TSize;
-  Alpha: TColor32;
-  PaddedText: string;
-begin
-  if Empty then Exit;
-
-  Alpha := Color shr 24;
-  Color := Color and $00FFFFFF;
-  AALevel := Constrain(AALevel, -1, 4);
-  PaddedText := Text + ' ';
-
-  {$IFDEF FPC}
-  if AALevel > -1 then
-    Font.Quality := fqNonAntialiased
-  else
-    Font.Quality := fqAntialiased;
-  {$ELSE}
-  if AALevel > -1 then
-    SetFontAntialiasing(Font, NONANTIALIASED_QUALITY)
-  else
-    SetFontAntialiasing(Font, ANTIALIASED_QUALITY);
-  {$ENDIF}
-
-  { TODO : Optimize Clipping here }
-  B := TBitmap32.Create;
-  with B do
-  try
-    if AALevel <= 0 then
-    begin
-      Sz := Self.TextExtent(PaddedText);
-      if Sz.cX > Self.Width then Sz.cX := Self.Width;
-      if Sz.cY > Self.Height then Sz.cY := Self.Height;
-      SetSize(Sz.cX, Sz.cY);
-      Font := Self.Font;
-      Clear(0);
-      Font.Color := clWhite;
-      Textout(0, 0, Text);
-      TextBlueToAlpha(B, Color);
-    end
-    else
-    begin
-      B2 := TBitmap32.Create;
-      with B2 do
-      try
-        Font := Self.Font;
-        Font.Size := Self.Font.Size shl AALevel;
-        Font.Color := clWhite;
-        Sz := TextExtent(PaddedText);
-        Sz.Cx := Sz.cx + 1 shl AALevel;
-        Sz.Cy := Sz.cy + 1 shl AALevel;
-        SetSize(Sz.Cx, Sz.Cy);
-        Clear(0);
-        Textout(0, 0, Text);
-        B.SetSize(Sz.cx shr AALevel, Sz.cy shr AALevel);
-        TextScaleDown(B, B2, AALevel, Color);
-      finally
-        Free;
-      end;
-    end;
-
-    DrawMode := dmBlend;
-    MasterAlpha := Alpha;
-    CombineMode := CombineMode;
-
-    DrawTo(Self, X, Y);
-  finally
-    Free;
-  end;
-
-  {$IFDEF FPC}
-  Font.Quality := fqDefault;
-  {$ELSE}
-  SetFontAntialiasing(Font, DEFAULT_QUALITY);
-  {$ENDIF}
-end;
-
-procedure TBitmap32.RenderTextW(X, Y: Integer; const Text: Widestring; AALevel: Integer; Color: TColor32);
-var
-  B, B2: TBitmap32;
-  Sz: TSize;
+{$IFNDEF PLATFORM_INDEPENDENT}
+  SzSpace: TSize;
+{$ENDIF}
   Alpha: TColor32;
   StockCanvas: TCanvas;
-  PaddedText: Widestring;
 begin
-  if Empty then Exit;
+  if Empty then
+    Exit;
 
   Alpha := Color shr 24;
   Color := Color and $00FFFFFF;
   AALevel := Constrain(AALevel, -1, 4);
-  PaddedText := Text + ' ';
 
   {$IFDEF FPC}
   if AALevel > -1 then
@@ -7246,12 +7263,12 @@ begin
   try
     if AALevel <= 0 then
     begin
-      Sz := TextExtentW(PaddedText);
+      Sz := Self.TextExtent(Text) + Self.TextExtent(' ');
       B.SetSize(Sz.cX, Sz.cY);
       B.Font := Font;
       B.Clear(0);
       B.Font.Color := clWhite;
-      B.TextoutW(0, 0, Text);
+      B.Textout(0, 0, Text);
       TextBlueToAlpha(B, Color);
     end
     else
@@ -7262,10 +7279,11 @@ begin
         StockCanvas.Font := Font;
         StockCanvas.Font.Size := Font.Size shl AALevel;
 {$IFDEF PLATFORM_INDEPENDENT}
-        Sz := StockCanvas.TextExtent(PaddedText);
+        Sz := StockCanvas.TextExtent(Text) + StockCanvas.TextExtent(' ');
 {$ELSE}
-        Windows.GetTextExtentPoint32W(StockCanvas.Handle, PWideChar(PaddedText),
-          Length(PaddedText), Sz);
+        Windows.GetTextExtentPoint32(StockCanvas.Handle, PChar(Text), Length(Text), Sz);
+        Windows.GetTextExtentPoint32(StockCanvas.Handle, PChar(string(' ')), 1, SzSpace);
+        Sz := Sz + SzSpace;
 {$ENDIF}
         Sz.Cx := (Sz.cx shr AALevel + 1) shl AALevel;
         Sz.Cy := (Sz.cy shr AALevel + 1) shl AALevel;
@@ -7275,7 +7293,7 @@ begin
           B2.Clear(0);
           B2.Font := StockCanvas.Font;
           B2.Font.Color := clWhite;
-          B2.TextoutW(0, 0, Text);
+          B2.Textout(0, 0, Text);
           B.SetSize(Sz.cx shr AALevel, Sz.cy shr AALevel);
           TextScaleDown(B, B2, AALevel, Color);
         finally
@@ -7333,8 +7351,8 @@ constructor TCustomBackend.Create(Owner: TCustomBitmap32);
 begin
   FOwner := Owner;
   Create;
-  if Assigned(Owner) then
-    Owner.Backend := Self;
+  if (FOwner <> nil) then
+    FOwner.Backend := Self;
 end;
 
 destructor TCustomBackend.Destroy;
@@ -7347,7 +7365,7 @@ procedure TCustomBackend.Clear;
 var
   Width, Height: Integer;
 begin
-  if Assigned(FOwner) then
+  if (FOwner <> nil) then
     ChangeSize(FOwner.FWidth, FOwner.FHeight, 0, 0, False)
   else
     ChangeSize(Width, Height, 0, 0, False);
@@ -7392,7 +7410,7 @@ var
 begin
   if Source is TCustomBackend then
   begin
-    if Assigned(FOwner) then
+    if (FOwner <> nil) then
     begin
       SrcBackend := TCustomBackend(Source);
 
@@ -7408,8 +7426,7 @@ begin
           SrcBackend.FOwner.Width * SrcBackend.FOwner.Height
         );
     end;
-  end
-  else
+  end else
     inherited;
 end;
 
@@ -7426,6 +7443,11 @@ end;
 procedure TCustomBackend.InitializeSurface(NewWidth, NewHeight: Integer; ClearBuffer: Boolean);
 begin
   // descendants override this method
+end;
+
+procedure TCustomBackend.SetOwner(AOwner: TCustomBitmap32);
+begin
+  FOwner := AOwner;
 end;
 
 { TCustomSampler }
@@ -7470,19 +7492,6 @@ end;
 
 { TCustomResampler }
 
-procedure TCustomResampler.AssignTo(Dst: TPersistent);
-begin
-  if Dst is TCustomResampler then
-    SmartAssign(Self, Dst)
-  else
-    inherited;
-end;
-
-procedure TCustomResampler.Changed;
-begin
-  if Assigned(FBitmap) then FBitmap.Changed;
-end;
-
 constructor TCustomResampler.Create;
 begin
   inherited;
@@ -7493,7 +7502,22 @@ constructor TCustomResampler.Create(ABitmap: TCustomBitmap32);
 begin
   Create;
   FBitmap := ABitmap;
-  if Assigned(ABitmap) then ABitmap.Resampler := Self;
+  if (FBitmap <> nil) then
+    FBitmap.Resampler := Self;
+end;
+
+procedure TCustomResampler.DoChanged;
+begin
+  if (FBitmap <> nil) then
+    FBitmap.Changed;
+end;
+
+procedure TCustomResampler.AssignTo(Dst: TPersistent);
+begin
+  if Dst is TCustomResampler then
+    SmartAssign(Self, Dst)
+  else
+    inherited;
 end;
 
 function TCustomResampler.GetSampleBounds: TFloatRect;

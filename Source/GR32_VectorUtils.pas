@@ -1,4 +1,4 @@
-unit GR32_VectorUtils;
+﻿unit GR32_VectorUtils;
 
 (* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1 or LGPL 2.1 with linking exception
@@ -38,6 +38,15 @@ interface
 
 {$BOOLEVAL OFF}
 
+{$define USE_CLIPPER_GROW}
+{-$define USE_OLD_GROW}
+
+{$if not defined(USE_CLIPPER_GROW)}
+  // We need at least one or the other
+  {$define USE_OLD_GROW}
+{$ifend}
+
+
 uses
   Math, {$IFDEF FPC}Types, {$ENDIF} {$IFDEF COMPILERXE2_UP}Types, {$ENDIF}
   GR32,
@@ -75,33 +84,50 @@ function DelaunayTriangulation(Points: TArrayOfFloatPoint): TArrayOfTriangleVert
 
 function BuildNormals(const Points: TArrayOfFloatPoint): TArrayOfFloatPoint; overload;
 function BuildNormals(const Points: TArrayOfFixedPoint): TArrayOfFixedPoint; overload;
-function Grow(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoint;
-  const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter;
-  Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload;
-function Grow(const Points: TArrayOfFloatPoint;
-  const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter;
-  Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload;
-function Grow(const Points: TArrayOfFixedPoint; const Normals: TArrayOfFixedPoint;
-  const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter;
-  Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
-function Grow(const Points: TArrayOfFixedPoint;
-  const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter;
-  Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
-function ReversePolygon(const Points: TArrayOfFloatPoint): TArrayOfFloatPoint; overload;
-function ReversePolygon(const Points: TArrayOfFixedPoint): TArrayOfFixedPoint; overload;
 
-function BuildPolyline(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat;
-  JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt;
-  MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload;
-function BuildPolyPolyLine(const Points: TArrayOfArrayOfFloatPoint;
-  Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter;
-  EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfArrayOfFloatPoint; overload;
-function BuildPolyline(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed;
-  JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt;
-  MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
-function BuildPolyPolyLine(const Points: TArrayOfArrayOfFixedPoint;
-  Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter;
-  EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfArrayOfFixedPoint; overload;
+function Grow(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload; deprecated; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Grow(const Points: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Grow(const Points: TArrayOfFixedPoint; const Normals: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload; deprecated; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Grow(const Points: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+
+// Old Grow function
+{$ifdef USE_OLD_GROW}
+function GrowOld(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload; deprecated;
+function GrowOld(const Points: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload; deprecated;
+function GrowOld(const Points: TArrayOfFixedPoint; const Normals: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload; deprecated;
+function GrowOld(const Points: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload; deprecated;
+{$endif USE_OLD_GROW}
+
+// Grow function using Clipper
+{$ifdef USE_CLIPPER_GROW}
+function GrowClipper(const Points: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload;
+function GrowClipper(const Points: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter; Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
+{$endif USE_CLIPPER_GROW}
+
+function ReversePolygon(const Points: TArrayOfFloatPoint): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function ReversePolygon(const Points: TArrayOfFixedPoint): TArrayOfFixedPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+
+function BuildPolyline(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function BuildPolyPolyLine(const Points: TArrayOfArrayOfFloatPoint; Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function BuildPolyline(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function BuildPolyPolyLine(const Points: TArrayOfArrayOfFixedPoint; Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfArrayOfFixedPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+
+// BuildPoly*line using old Grow function (now GrowOld)
+{$ifdef USE_OLD_GROW}
+function BuildPolylineOld(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload;
+function BuildPolyPolyLineOld(const Points: TArrayOfArrayOfFloatPoint; Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfArrayOfFloatPoint; overload;
+function BuildPolylineOld(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
+function BuildPolyPolyLineOld(const Points: TArrayOfArrayOfFixedPoint; Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfArrayOfFixedPoint; overload;
+{$endif USE_OLD_GROW}
+
+// BuildPoly*line using Clipper
+{$ifdef USE_CLIPPER_GROW}
+function BuildPolylineClipper(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfFloatPoint; overload;
+function BuildPolyPolyLineClipper(const Points: TArrayOfArrayOfFloatPoint; Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFloat = DEFAULT_MITER_LIMIT): TArrayOfArrayOfFloatPoint; overload;
+function BuildPolylineClipper(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
+function BuildPolyPolyLineClipper(const Points: TArrayOfArrayOfFixedPoint; Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle = jsMiter; EndStyle: TEndStyle = esButt; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfArrayOfFixedPoint; overload;
+{$endif USE_CLIPPER_GROW}
+
 function BuildDashedLine(const Points: TArrayOfFloatPoint;
   const DashArray: TArrayOfFloat; DashOffset: TFloat = 0;
   Closed: Boolean = False): TArrayOfArrayOfFloatPoint; overload;
@@ -123,14 +149,14 @@ function Line(const P1, P2: TFloatPoint): TArrayOfFloatPoint; overload;
 function Line(const X1, Y1, X2, Y2: TFloat): TArrayOfFloatPoint; overload;
 function VertLine(const X, Y1, Y2: TFloat): TArrayOfFloatPoint;
 function HorzLine(const X1, Y, X2: TFloat): TArrayOfFloatPoint;
-function Circle(const P: TFloatPoint; const Radius: TFloat; Steps: Integer): TArrayOfFloatPoint; overload;
-function Circle(const P: TFloatPoint; const Radius: TFloat): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Circle(const X, Y, Radius: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Circle(const X, Y, Radius: TFloat): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Circle(const R: TRect): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Circle(const R: TRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Circle(const R: TFloatRect): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Circle(const R: TFloatRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Circle(const P: TFloatPoint; const Radius: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const P: TFloatPoint; const Radius: TFloat): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const X, Y, Radius: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const X, Y, Radius: TFloat): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const R: TRect): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const R: TRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const R: TFloatRect): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Circle(const R: TFloatRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
 function Pie(const P: TFloatPoint; const Radius: TFloat; const Angle, Offset: TFloat; Steps: Integer): TArrayOfFloatPoint; overload;
 function Pie(const P: TFloatPoint; const Radius: TFloat; const Angle: TFloat; const Offset: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 function Pie(const P: TFloatPoint; const Radius: TFloat; const Angle: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -138,22 +164,18 @@ function Pie(const X, Y, Radius: TFloat; const Angle, Offset: TFloat; Steps: Int
 function Pie(const X, Y, Radius: TFloat; const Angle: TFloat; const Offset: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 function Pie(const X, Y, Radius: TFloat; const Angle: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 function Ellipse(const P, R: TFloatPoint; Steps: Integer): TArrayOfFloatPoint; overload;
-function Ellipse(const P, R: TFloatPoint): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Ellipse(const X, Y, Rx, Ry: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Ellipse(const X, Y, Rx, Ry: TFloat): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Ellipse(const R: TRect): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Ellipse(const R: TFloatRect): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Ellipse(const R: TRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Ellipse(const R: TFloatRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Ellipse(const P, R: TFloatPoint): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Ellipse(const X, Y, Rx, Ry: TFloat; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Ellipse(const X, Y, Rx, Ry: TFloat): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Ellipse(const R: TRect): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Ellipse(const R: TFloatRect): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Ellipse(const R: TRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
+function Ellipse(const R: TFloatRect; Steps: Integer): TArrayOfFloatPoint; overload; {$IFDEF INLINING_ENHANCED_RECORDS} inline; {$ENDIF}
 
-function Star(const P: TFloatPoint; const InnerRadius, OuterRadius: TFloat;
-  Vertices: Integer = 5; Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Star(const X, Y, InnerRadius, OuterRadius: TFloat;
-  Vertices: Integer = 5; Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Star(const P: TFloatPoint; const Radius: TFloat; Vertices: Integer = 5;
-  Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Star(const X, Y, Radius: TFloat; Vertices: Integer = 5;
-  Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Star(const P: TFloatPoint; const InnerRadius, OuterRadius: TFloat; Vertices: Integer = 5; Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Star(const X, Y, InnerRadius, OuterRadius: TFloat; Vertices: Integer = 5; Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Star(const P: TFloatPoint; const Radius: TFloat; Vertices: Integer = 5; Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function Star(const X, Y, Radius: TFloat; Vertices: Integer = 5; Rotation: TFloat = 0): TArrayOfFloatPoint; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 function Rectangle(const R: TFloatRect): TArrayOfFloatPoint; {$IFDEF USEINLINING} inline; {$ENDIF}
 function RoundRect(const R: TFloatRect; const Radius: TFloat): TArrayOfFloatPoint; {$IFDEF USEINLINING} inline; {$ENDIF}
 
@@ -206,9 +228,21 @@ implementation
 
 uses
   SysUtils,
+{$ifdef USE_CLIPPER_GROW}
+  Clipper,
+  Clipper.Core,
+  Clipper.Offset,
+  GR32_Clipper2,
+{$endif USE_CLIPPER_GROW}
   GR32_Math,
   GR32_Geometry,
   GR32_LowLevel;
+
+{$ifdef USE_CLIPPER_GROW}
+const
+  JoinStyleToJoinType: array[TJoinStyle] of TJoinType = (jtMiter, jtBevel, jtRound, jtSquare);
+  EndStyleToEndType: array[TEndStyle] of TEndType = (etButt, etSquare, etRound);
+{$endif USE_CLIPPER_GROW}
 
 type
   TTransformationAccess = class(TTransformation);
@@ -482,6 +516,11 @@ begin
   Result[L] := P1;
 end;
 
+// Note:
+// ClipLine has been copied to GR32 to avoid referencing this unit there since that would
+// prevent inlining here of GR32 functions due to
+// H2456 Inline function '%s' has not been expanded because contained unit '%s' uses compiling unit '%s'
+// Make sure to keep the two functions in sync!
 function ClipLine(var X1, Y1, X2, Y2: Integer; MinX, MinY, MaxX, MaxY: Integer): Boolean;
 var
   C1, C2: Integer;
@@ -1414,7 +1453,9 @@ var
   R2: TFloatRect;
 begin
   R2 := R;
+  // Shrink box and then...
   GR32.InflateRect(R2, -Radius, -Radius);
+  // Grow it with rounded corners
   Result := Grow(Rectangle(R2), Radius, jsRound, True);
 end;
 
@@ -1485,8 +1526,9 @@ begin
   end;
 end;
 
-function Grow(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoint;
-  const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TArrayOfFloatPoint; overload;
+{$ifdef USE_OLD_GROW}
+function GrowOld(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoint;
+  const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TArrayOfFloatPoint;
 const
   BUFFSIZEINCREMENT = 128;
   MINDISTPIXEL = 1.414; // just a little bit smaller than sqrt(2),
@@ -1516,7 +1558,7 @@ var
     CX := X1 + X2;
     CY := Y1 + Y2;
 
-    R := X1 * CX + Y1 * CY; //(1 - cos(�))  (range: 0 <= R <= 2)
+    R := X1 * CX + Y1 * CY; //(1 - cos(Θ))  (range: 0 <= R <= 2)
     if R < RMin then
     begin
       AddPoint(Delta * X1, Delta * Y1);
@@ -1642,14 +1684,18 @@ var
   begin
     PX := X;
     PY := Y;
-    case JoinStyle of
-      jsMiter: AddMitered(A.X, A.Y, B.X, B.Y);
-      jsBevel: AddBevelled(A.X, A.Y, B.X, B.Y);
-      jsRoundEx: AddRoundedJoin(A.X, A.Y, B.X, B.Y);
-      else if (X1 * Y2 - X2 * Y1) * Delta < 0 then //miter when concave
-        AddMitered(A.X, A.Y, B.X, B.Y) else
-        AddRoundedJoin(A.X, A.Y, B.X, B.Y);
-    end;
+
+    if (JoinStyle <> jsRoundEx) and ((X1 * Y2 - X2 * Y1) * Delta < 0)  then
+    begin
+      AddPoint(Delta * X1, Delta * Y1);
+      AddPoint(Delta * X2, Delta * Y2);
+    end else
+      case JoinStyle of
+        jsMiter: AddMitered(A.X, A.Y, B.X, B.Y);
+        jsBevel: AddBevelled(A.X, A.Y, B.X, B.Y);
+        jsRound: AddRoundedJoin(A.X, A.Y, B.X, B.Y);
+        jsRoundEx: AddRoundedJoin(A.X, A.Y, B.X, B.Y);
+      end;
   end;
 
 begin
@@ -1696,112 +1742,97 @@ begin
   SetLength(Result, ResSize);
 end;
 
-function Grow(const Points: TArrayOfFloatPoint;
+function GrowOld(const Points: TArrayOfFloatPoint;
   const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean;
-  MiterLimit: TFloat): TArrayOfFloatPoint; overload;
+  MiterLimit: TFloat): TArrayOfFloatPoint;
 var
   Normals: TArrayOfFloatPoint;
 begin
   Normals := BuildNormals(Points);
-  Result := Grow(Points, Normals, Delta, JoinStyle, Closed, MiterLimit);
+  Result := GrowOld(Points, Normals, Delta, JoinStyle, Closed, MiterLimit);
 end;
+{$endif USE_OLD_GROW}
 
 // Converts an array of points in TFixed format to an array of points in TFloat format
-function FixedPointToFloatPoint(const Points: TArrayOfFixedPoint)
-  : TArrayOfFloatPoint;
+function FixedPointToFloatPoint(const Points: TArrayOfFixedPoint): TArrayOfFloatPoint;
 var
   Index: Integer;
 begin
-  if Length(Points) > 0 then
+  SetLength(Result, Length(Points));
+  for Index := 0 to Length(Points) - 1 do
   begin
-    SetLength(Result, Length(Points));
-    for Index := 0 to Length(Points) - 1 do
-    begin
-      Result[Index].X := Points[Index].X * FixedToFloat;
-      Result[Index].Y := Points[Index].Y * FixedToFloat;
-    end;
+    Result[Index].X := Points[Index].X * FixedToFloat;
+    Result[Index].Y := Points[Index].Y * FixedToFloat;
   end;
 end;
 
 // Converts an array of array of points in TFixed format to an array of array of points in TFloat format
-function FixedPointToFloatPoint(const Points: TArrayOfArrayOfFixedPoint)
-  : TArrayOfArrayOfFloatPoint;
+function FixedPointToFloatPoint(const Points: TArrayOfArrayOfFixedPoint): TArrayOfArrayOfFloatPoint;
 var
   Index, PointIndex: Integer;
 begin
-  if Length(Points) > 0 then
+  SetLength(Result, Length(Points));
+  for Index := 0 to Length(Points) - 1 do
   begin
-    SetLength(Result, Length(Points));
-    for Index := 0 to Length(Points) - 1 do
+    SetLength(Result[Index], Length(Points[Index]));
+    for PointIndex := 0 to Length(Points[Index]) - 1 do
     begin
-      SetLength(Result[Index], Length(Points[Index]));
-      for PointIndex := 0 to Length(Points[Index]) - 1 do
-      begin
-        Result[Index, PointIndex].X := Points[Index, PointIndex].X * FixedToFloat;
-        Result[Index, PointIndex].Y := Points[Index, PointIndex].Y * FixedToFloat;
-      end;
+      Result[Index, PointIndex].X := Points[Index, PointIndex].X * FixedToFloat;
+      Result[Index, PointIndex].Y := Points[Index, PointIndex].Y * FixedToFloat;
     end;
   end;
 end;
 
 // Converts an array of points in TFixed format to an array of points in TFloat format
-function FloatPointToFixedPoint(const Points: TArrayOfFloatPoint)
-  : TArrayOfFixedPoint;
+function FloatPointToFixedPoint(const Points: TArrayOfFloatPoint): TArrayOfFixedPoint;
 var
   Index: Integer;
 begin
-  if Length(Points) > 0 then
+  SetLength(Result, Length(Points));
+  for Index := 0 to Length(Points) - 1 do
   begin
-    SetLength(Result, Length(Points));
-    for Index := 0 to Length(Points) - 1 do
-    begin
-      Result[Index].X := Fixed(Points[Index].X);
-      Result[Index].Y := Fixed(Points[Index].Y);
-    end;
+    Result[Index].X := Fixed(Points[Index].X);
+    Result[Index].Y := Fixed(Points[Index].Y);
   end;
 end;
 
 // Converts an array of array of points in TFixed format to an array of array of points in TFloat format
-function FloatPointToFixedPoint(const Points: TArrayOfArrayOfFloatPoint)
-  : TArrayOfArrayOfFixedPoint;
+function FloatPointToFixedPoint(const Points: TArrayOfArrayOfFloatPoint): TArrayOfArrayOfFixedPoint;
 var
   Index, PointIndex: Integer;
 begin
-  if Length(Points) > 0 then
+  SetLength(Result, Length(Points));
+  for Index := 0 to Length(Points) - 1 do
   begin
-    SetLength(Result, Length(Points));
-    for Index := 0 to Length(Points) - 1 do
+    SetLength(Result[Index], Length(Points[Index]));
+    for PointIndex := 0 to Length(Points[Index]) - 1 do
     begin
-      SetLength(Result[Index], Length(Points[Index]));
-      for PointIndex := 0 to Length(Points[Index]) - 1 do
-      begin
-        Result[Index, PointIndex].X := Fixed(Points[Index, PointIndex].X);
-        Result[Index, PointIndex].Y := Fixed(Points[Index, PointIndex].Y);
-      end;
+      Result[Index, PointIndex].X := Fixed(Points[Index, PointIndex].X);
+      Result[Index, PointIndex].Y := Fixed(Points[Index, PointIndex].Y);
     end;
   end;
 end;
 
-function Grow(const Points: TArrayOfFixedPoint; const Normals: TArrayOfFixedPoint;
-  const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter;
-  Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
+{$ifdef USE_OLD_GROW}
+function GrowOld(const Points: TArrayOfFixedPoint; const Normals: TArrayOfFixedPoint;
+  const Delta: TFixed; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFixed): TArrayOfFixedPoint;
 var
   tmp: TArrayOfFloatPoint;
 begin
-  tmp := Grow(FixedPointToFloatPoint(Points), FixedPointToFloatPoint(Normals),
-    Delta * FixedToFloat, JoinStyle, Closed, MiterLimit * FixedToFloat);
+  tmp := GrowOld(FixedPointToFloatPoint(Points), FixedPointToFloatPoint(Normals),
+    Delta * FixedToFloat, JoinStyle, Closed, MiterLimit);
   result := FloatPointToFixedPoint(tmp);
 end;
 
-function Grow(const Points: TArrayOfFixedPoint;
-  const Delta: TFixed; JoinStyle: TJoinStyle = jsMiter;
-  Closed: Boolean = True; MiterLimit: TFixed = DEFAULT_MITER_LIMIT_FIXED): TArrayOfFixedPoint; overload;
+function GrowOld(const Points: TArrayOfFixedPoint;
+  const Delta: TFixed; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFixed): TArrayOfFixedPoint;
 var
   Normals: TArrayOfFixedPoint;
 begin
   Normals := BuildNormals(Points);
-  Result := Grow(Points, Normals, Delta, JoinStyle, Closed, MiterLimit);
+  Result := GrowOld(Points, Normals, Delta, JoinStyle, Closed, MiterLimit);
 end;
+{$endif USE_OLD_GROW}
 
 function ReversePolygon(const Points: TArrayOfFloatPoint): TArrayOfFloatPoint;
 var
@@ -1825,6 +1856,7 @@ begin
     Result[I] := Points[L - I];
 end;
 
+{$ifdef USE_OLD_GROW}
 function BuildLineEnd(const P, N: TFloatPoint; const W: TFloat;
   EndStyle: TEndStyle): TArrayOfFloatPoint; overload;
 var
@@ -1881,7 +1913,7 @@ begin
   end;
 end;
 
-function BuildPolyline(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat;
+function BuildPolylineOld(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat;
   JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFloat): TArrayOfFloatPoint;
 var
   L, H: Integer;
@@ -1900,8 +1932,8 @@ begin
   L := 0;
   while (Normals[L].X = 0) and (Normals[L].Y = 0) do Inc(L);
 
-  P1 := Grow(Points, Normals, V, JoinStyle, False, MiterLimit);
-  P2 := ReversePolygon(Grow(Points, Normals, -V, JoinStyle, False, MiterLimit));
+  P1 := GrowOld(Points, Normals, V, JoinStyle, False, MiterLimit);
+  P2 := ReversePolygon(GrowOld(Points, Normals, -V, JoinStyle, False, MiterLimit));
 
   E1 := BuildLineEnd(Points[0], Normals[L], -V, EndStyle);
   E2 := BuildLineEnd(Points[High(Points)], Normals[H], V, EndStyle);
@@ -1914,7 +1946,7 @@ begin
   Move(P2[0], P^, Length(P2) * SizeOf(TFloatPoint));
 end;
 
-function BuildPolyPolyLine(const Points: TArrayOfArrayOfFloatPoint;
+function BuildPolyPolyLineOld(const Points: TArrayOfArrayOfFloatPoint;
   Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle;
   EndStyle: TEndStyle; MiterLimit: TFloat): TArrayOfArrayOfFloatPoint;
 var
@@ -1922,15 +1954,17 @@ var
   P1, P2: TArrayOfFloatPoint;
   Dst: TArrayOfArrayOfFloatPoint;
   Normals: TArrayOfFloatPoint;
+  HalfStrokeWidth: TFloat;
 begin
   if Closed then
   begin
     SetLength(Dst, Length(Points) * 2);
+    HalfStrokeWidth := StrokeWidth * 0.5;
     for I := 0 to High(Points) do
     begin
       Normals := BuildNormals(Points[I]);
-      P1 := Grow(Points[I], Normals, StrokeWidth * 0.5, JoinStyle, True, MiterLimit);
-      P2 := Grow(Points[I], Normals, -StrokeWidth * 0.5, JoinStyle, True, MiterLimit);
+      P1 := GrowOld(Points[I], Normals, HalfStrokeWidth, JoinStyle, True, MiterLimit);
+      P2 := GrowOld(Points[I], Normals, -HalfStrokeWidth, JoinStyle, True, MiterLimit);
       Dst[I * 2] := P1;
       Dst[I * 2 + 1] := ReversePolygon(P2);
     end;
@@ -1939,12 +1973,12 @@ begin
   begin
     SetLength(Dst, Length(Points));
     for I := 0 to High(Points) do
-      Dst[I] := BuildPolyline(Points[I], StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+      Dst[I] := BuildPolylineOld(Points[I], StrokeWidth, JoinStyle, EndStyle, MiterLimit);
   end;
   Result := Dst;
 end;
 
-function BuildPolyline(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed;
+function BuildPolylineOld(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed;
   JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFixed): TArrayOfFixedPoint;
 var
   L, H: Integer;
@@ -1963,8 +1997,8 @@ begin
   L := 0;
   while (Normals[L].X = 0) and (Normals[L].Y = 0) do Inc(L);
 
-  P1 := Grow(Points, Normals, V, JoinStyle, False, MiterLimit);
-  P2 := ReversePolygon(Grow(Points, Normals, -V, JoinStyle, False, MiterLimit));
+  P1 := GrowOld(Points, Normals, V, JoinStyle, False, MiterLimit);
+  P2 := ReversePolygon(GrowOld(Points, Normals, -V, JoinStyle, False, MiterLimit));
 
   E1 := BuildLineEnd(Points[0], Normals[L], -V, EndStyle);
   E2 := BuildLineEnd(Points[High(Points)], Normals[H], V, EndStyle);
@@ -1977,7 +2011,7 @@ begin
   Move(P2[0], P^, Length(P2) * SizeOf(TFixedPoint));
 end;
 
-function BuildPolyPolyLine(const Points: TArrayOfArrayOfFixedPoint;
+function BuildPolyPolyLineOld(const Points: TArrayOfArrayOfFixedPoint;
   Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle;
   EndStyle: TEndStyle; MiterLimit: TFixed): TArrayOfArrayOfFixedPoint;
 var
@@ -1985,15 +2019,17 @@ var
   P1, P2: TArrayOfFixedPoint;
   Dst: TArrayOfArrayOfFixedPoint;
   Normals: TArrayOfFixedPoint;
+  HalfStrokeWidth: TFixed;
 begin
   if Closed then
   begin
     SetLength(Dst, Length(Points) * 2);
+    HalfStrokeWidth := StrokeWidth shr 1;
     for I := 0 to High(Points) do
     begin
       Normals := BuildNormals(Points[I]);
-      P1 := Grow(Points[I], Normals, StrokeWidth shr 1, JoinStyle, True, MiterLimit);
-      P2 := Grow(Points[I], Normals, -StrokeWidth shr 1, JoinStyle, True, MiterLimit);
+      P1 := GrowOld(Points[I], Normals, HalfStrokeWidth, JoinStyle, True, MiterLimit);
+      P2 := GrowOld(Points[I], Normals, -HalfStrokeWidth, JoinStyle, True, MiterLimit);
       Dst[I * 2] := P1;
       Dst[I * 2 + 1] := ReversePolygon(P2);
     end;
@@ -2002,10 +2038,12 @@ begin
   begin
     SetLength(Dst, Length(Points));
     for I := 0 to High(Points) do
-      Dst[I] := BuildPolyline(Points[I], StrokeWidth, JoinStyle, EndStyle);
+      Dst[I] := BuildPolylineOld(Points[I], StrokeWidth, JoinStyle, EndStyle);
   end;
   Result := Dst;
 end;
+
+{$endif USE_OLD_GROW}
 
 function BuildDashedLine(const Points: TArrayOfFloatPoint;
   const DashArray: TArrayOfFloat; DashOffset: TFloat = 0;
@@ -2084,7 +2122,7 @@ begin
   DashOffset := Wrap(DashOffset, V);
 
   DashOffset := DashOffset - V;
-  while DashOffset < 0 do
+  while (DashOffset < 0) and (DashIndex < High(DashArray)) do
   begin
     Inc(DashIndex);
     DashOffset := DashOffset + DashArray[DashIndex];
@@ -2104,7 +2142,12 @@ begin
     AddDash(0);
     len1 := Length(Result[0]);
     len2 := Length(Result[J]);
-    if (len1 > 0) and (len2 > 0) then
+    // Only merge if the first and last points are contributing on a dash
+    {$IFNDEF FPC}
+      if (len1 > 0) and (len2 > 0) and (Result[0][0] = Result[J][len2 - 1]) then
+    {$ELSE}
+      if (len1 > 0) and (len2 > 0) and (Result[0][0].X = Result[J][len2 - 1].X) and (Result[0][0].Y = Result[J][len2 - 1].Y) then
+    {$ENDIF}
     begin
       SetLength(Result[0], len1 + len2 -1);
       Move(Result[0][0], Result[0][len2 - 1], SizeOf(TFloatPoint) * len1);
@@ -2114,7 +2157,8 @@ begin
     end;
   end;
 
-  if (J >= 0) and (Length(Result[J]) = 0) then SetLength(Result, J);
+  if (J >= 0) and (Length(Result[J]) = 0) then
+    SetLength(Result, J);
 end;
 
 function BuildDashedLine(const Points: TArrayOfFixedPoint;
@@ -2979,15 +3023,13 @@ begin
 end;
 
 // Copy data from Polygon to simple PolyPolygon (using 1 sub polygon only)
-function PolyPolygon(const Points: TArrayOfFloatPoint)
-  : TArrayOfArrayOfFloatPoint;
+function PolyPolygon(const Points: TArrayOfFloatPoint): TArrayOfArrayOfFloatPoint;
 begin
   SetLength(Result, 1);
   Result[0] := Points;
 end;
 
-function PolyPolygon(const Points: TArrayOfFixedPoint)
-  : TArrayOfArrayOfFixedPoint;
+function PolyPolygon(const Points: TArrayOfFixedPoint): TArrayOfArrayOfFixedPoint;
 begin
   SetLength(Result, 1);
   Result[0] := Points;
@@ -3060,5 +3102,210 @@ begin
     end;
   end;
 end;
+
+function Grow(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TArrayOfFloatPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := GrowClipper(Points, Delta, JoinStyle, Closed, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := GrowOld(Points, Normals, Delta, JoinStyle, Closed, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+function Grow(const Points: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TArrayOfFloatPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := GrowClipper(Points, Delta, JoinStyle, Closed, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := GrowOld(Points, Delta, JoinStyle, Closed, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+function Grow(const Points: TArrayOfFixedPoint; const Normals: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFixed): TArrayOfFixedPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := GrowClipper(Points, Delta, JoinStyle, Closed, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := GrowOld(Points, Normals, Delta, JoinStyle, Closed, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+function Grow(const Points: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFixed): TArrayOfFixedPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := GrowClipper(Points, Delta, JoinStyle, Closed, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := GrowOld(Points, Delta, JoinStyle, Closed, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+{$ifdef USE_CLIPPER_GROW}
+function GrowClipper(const Points: TPaths64; const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TPaths64; overload;
+var
+  EndType: TEndType;
+begin
+  if (Closed) then
+    EndType := etPolygon
+  else
+    EndType := etJoined;
+
+  Result := Clipper.InflatePaths(Points, Delta, JoinStyleToJoinType[JoinStyle], EndType, MiterLimit);
+
+  Result := Clipper.Core.RamerDouglasPeucker(Result, 1);
+end;
+
+function GrowClipper(const Points: TArrayOfFloatPoint; const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TArrayOfFloatPoint;
+var
+  Points64, Result64: TPaths64;
+  Res: TArrayOfArrayOfFloatPoint;
+begin
+  Points64 := [GR32_Clipper2.FloatPointsToPath64(Points)];
+
+  Result64 := GrowClipper(Points64, Delta * GR32_Clipper2.ClipperFloat.GrowScale, JoinStyle, Closed, MiterLimit);
+
+  Res := GR32_Clipper2.Paths64ToFloatPoints(Result64);
+
+  if (Length(Res) > 0) then
+    Result := Res[0]
+  else
+    SetLength(Result, 0);
+end;
+
+function GrowClipper(const Points: TArrayOfFixedPoint; const Delta: TFixed; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFixed): TArrayOfFixedPoint;
+var
+  Points64, Result64: TPaths64;
+  Res: TArrayOfArrayOfFixedPoint;
+begin
+  Points64 := [GR32_Clipper2.FixedPointsToPath64(Points)];
+
+  Result64 := GrowClipper(Points64, Delta * FixedToFloat, JoinStyle, Closed, MiterLimit);
+
+  Res := GR32_Clipper2.Paths64ToFixedPoints(Result64);
+
+  if (Length(Res) > 0) then
+    Result := Res[0]
+  else
+    SetLength(Result, 0);
+end;
+{$endif USE_CLIPPER_GROW}
+
+function BuildPolyline(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFloat): TArrayOfFloatPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := BuildPolylineClipper(Points, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := BuildPolylineOld(Points, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+function BuildPolyPolyLine(const Points: TArrayOfArrayOfFloatPoint; Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFloat): TArrayOfArrayOfFloatPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := BuildPolyPolyLineClipper(Points, Closed, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := BuildPolyPolyLineOld(Points, Closed, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+function BuildPolyline(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFixed): TArrayOfFixedPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := BuildPolylineClipper(Points, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := BuildPolylineOld(Points, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+function BuildPolyPolyLine(const Points: TArrayOfArrayOfFixedPoint; Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFixed): TArrayOfArrayOfFixedPoint;
+begin
+{$ifdef USE_CLIPPER_GROW}
+  Result := BuildPolyPolyLineClipper(Points, Closed, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$else USE_CLIPPER_GROW}
+  Result := BuildPolyPolyLineOld(Points, Closed, StrokeWidth, JoinStyle, EndStyle, MiterLimit);
+{$endif USE_CLIPPER_GROW}
+end;
+
+{$ifdef USE_CLIPPER_GROW}
+function BuildPolylineClipper(const Points: TArrayOfFloatPoint; StrokeWidth: TFloat; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFloat): TArrayOfFloatPoint;
+var
+  Paths64: TPaths64;
+  EndType: TEndType;
+  Result64: TPaths64;
+  Res: TArrayOfArrayOfFloatPoint;
+begin
+  Paths64 := [GR32_Clipper2.FloatPointsToPath64(Points)];
+
+  EndType := EndStyleToEndType[EndStyle];
+
+  Result64 := Clipper.InflatePaths(Paths64, StrokeWidth * GR32_Clipper2.ClipperFloat.GrowScale, JoinStyleToJoinType[JoinStyle], EndType, MiterLimit);
+  Result64 := Clipper.Core.RamerDouglasPeucker(Result64, 1);
+
+  Res := GR32_Clipper2.Paths64ToFloatPoints(Result64);
+
+  if (Length(Res) > 0) then
+    Result := Res[0]
+  else
+    SetLength(Result, 0);
+end;
+
+function BuildPolyPolyLineClipper(const Points: TArrayOfArrayOfFloatPoint; Closed: Boolean; StrokeWidth: TFloat; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFloat): TArrayOfArrayOfFloatPoint;
+var
+  Paths64: TPaths64;
+  EndType: TEndType;
+  Result64: TPaths64;
+begin
+  Paths64 := GR32_Clipper2.FloatPointsToPaths64(Points);
+
+  if (Closed) then
+    EndType := etJoined
+  else
+    EndType := EndStyleToEndType[EndStyle];
+
+  Result64 := Clipper.InflatePaths(Paths64, StrokeWidth * GR32_Clipper2.ClipperFloat.GrowScale, JoinStyleToJoinType[JoinStyle], EndType, MiterLimit);
+
+  Result64 := Clipper.Core.RamerDouglasPeucker(Result64, 1);
+
+  Result := GR32_Clipper2.Paths64ToFloatPoints(Result64);
+end;
+
+function BuildPolylineClipper(const Points: TArrayOfFixedPoint; StrokeWidth: TFixed; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFixed): TArrayOfFixedPoint;
+var
+  Paths64: TPaths64;
+  Result64: TPaths64;
+  Res: TArrayOfArrayOfFixedPoint;
+begin
+  Paths64 := [GR32_Clipper2.FixedPointsToPath64(Points)];
+
+  Result64 := Clipper.InflatePaths(Paths64, StrokeWidth * GR32_Clipper2.ClipperFloat.GrowScale, JoinStyleToJoinType[JoinStyle], EndStyleToEndType[EndStyle], MiterLimit);
+  Result64 := Clipper.Core.RamerDouglasPeucker(Result64, 1);
+
+  Res := GR32_Clipper2.Paths64ToFixedPoints(Result64);
+
+  if (Length(Res) > 0) then
+    Result := Res[0]
+  else
+    SetLength(Result, 0);
+end;
+
+function BuildPolyPolyLineClipper(const Points: TArrayOfArrayOfFixedPoint; Closed: Boolean; StrokeWidth: TFixed; JoinStyle: TJoinStyle; EndStyle: TEndStyle; MiterLimit: TFixed): TArrayOfArrayOfFixedPoint;
+var
+  Paths64: TPaths64;
+  EndType: TEndType;
+  Result64: TPaths64;
+begin
+  Paths64 := GR32_Clipper2.FixedPointsToPaths64(Points);
+
+  if (Closed) then
+    EndType := etJoined
+  else
+    EndType := EndStyleToEndType[EndStyle];
+
+  Result64 := Clipper.InflatePaths(Paths64, StrokeWidth * GR32_Clipper2.ClipperFloat.GrowScale, JoinStyleToJoinType[JoinStyle], EndType, MiterLimit);
+  Result64 := Clipper.Core.RamerDouglasPeucker(Result64, 1);
+
+  Result := GR32_Clipper2.Paths64ToFixedPoints(Result64);
+end;
+
+{$endif USE_CLIPPER_GROW}
 
 end.

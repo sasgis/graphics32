@@ -45,14 +45,14 @@ function BlendReg_ASM(F, B: TColor32): TColor32;
 procedure BlendMem_ASM(F: TColor32; var B: TColor32);
 procedure BlendMems_ASM(F: TColor32; B: PColor32; Count: Integer);
 
-function BlendRegEx_ASM(F, B, M: TColor32): TColor32;
-procedure BlendMemEx_ASM(F: TColor32; var B:TColor32; M: TColor32);
+function BlendRegEx_ASM(F, B: TColor32; M: Cardinal): TColor32;
+procedure BlendMemEx_ASM(F: TColor32; var B:TColor32; M: Cardinal);
 
 procedure BlendLine_ASM(Src, Dst: PColor32; Count: Integer);
 procedure BlendLine1_ASM(Src: TColor32; Dst: PColor32; Count: Integer);
 
-function CombineReg_ASM(X, Y, W: TColor32): TColor32;
-procedure CombineMem_ASM(X: TColor32; var Y: TColor32; W: TColor32);
+function CombineReg_ASM(X, Y: TColor32; W: Cardinal): TColor32;
+procedure CombineMem_ASM(X: TColor32; var Y: TColor32; W: Cardinal);
 
 {$IFDEF TARGET_x86}
 function MergeReg_ASM(F, B: TColor32): TColor32;
@@ -68,6 +68,9 @@ uses
   GR32_System;
 
 { ASM versions }
+
+const
+  BlendRegistryPriorityASM = -256;
 
 { Assembler versions }
 
@@ -482,7 +485,7 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegEx_ASM(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function BlendRegEx_ASM(F, B: TColor32; M: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F multiplied by master alpha (M)
@@ -604,7 +607,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemEx_ASM(F: TColor32; var B: TColor32; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure BlendMemEx_ASM(F: TColor32; var B: TColor32; M: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX <- F
@@ -619,10 +622,9 @@ asm
 
   // Get weight W = Fa * M
         MOV     EBX,EAX         // EBX  <-  Fa Fr Fg Fb
-        INC     ECX             // 255:256 range bias for M
         SHR     EBX,24          // EBX  <-  00 00 00 Fa
+        INC     ECX             // 255:256 range bias for M
         IMUL    ECX,EBX         // ECX  <-  00 00  W **
-        ADD     ECX,bias
         SHR     ECX,8           // ECX  <-  00 00 00  W
         JZ      @1              // W = 0 ?  => write nothing
 
@@ -1269,7 +1271,7 @@ end;
 
 {$ENDIF}
 
-function CombineReg_ASM(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+function CombineReg_ASM(X, Y: TColor32; W: Cardinal): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // combine RGBA channels of colors X and Y with the weight of X given in W
   // Result Z = W * X + (1 - W) * Y (all channels are combined, including alpha)
@@ -1376,7 +1378,7 @@ asm
 {$ENDIF}
 end;
 
-procedure CombineMem_ASM(X: TColor32; var Y: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+procedure CombineMem_ASM(X: TColor32; var Y: TColor32; W: Cardinal); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX <- F
@@ -1494,4 +1496,26 @@ procedure EMMS_ASM; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 end;
 
+
+procedure RegisterBindingFunctions;
+begin
+{$IFNDEF PUREPASCAL}
+  BlendRegistry.Add(FID_EMMS, @EMMS_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_COMBINEREG, @CombineReg_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDREG, @BlendReg_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDMEM, @BlendMem_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDLINE, @BlendLine_ASM, [], 0, BlendRegistryPriorityASM);
+  BlendRegistry.Add(FID_BLENDLINE1, @BlendLine1_ASM, [], 0, BlendRegistryPriorityASM);
+{$IFNDEF TARGET_x64}
+  BlendRegistry.Add(FID_MERGEREG, @MergeReg_ASM, [], 0, BlendRegistryPriorityASM);
+{$ENDIF}
+{$ENDIF}
+end;
+
+initialization
+  RegisterBindingFunctions;
 end.
