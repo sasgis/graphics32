@@ -48,7 +48,9 @@ interface
 {$ENDIF}
 
 uses
-  Graphics, GR32, GR32_Math;
+  Graphics,
+  GR32_Math,
+  GR32;
 
 { Clamp function restricts value to [0..255] range }
 function Clamp(const Value: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -154,20 +156,28 @@ const
 function Div255(Value: Cardinal): Cardinal; {$IFDEF USEINLINING} inline; {$ENDIF}
 
 { shift right with sign conservation }
-// These are all obsolete as both Delphi and FPC now compiles (x div 2^n) to (x sar n)
-// If inlining is enabled they can still be used to make the code more readable. Otherwise
-// the call overhead just makes the code slower.
-function SAR_3(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 8'; {$ENDIF}
-function SAR_4(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 16'; {$ENDIF}
-function SAR_6(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 64'; {$ENDIF}
-function SAR_8(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 256'; {$ENDIF}
-function SAR_9(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 512'; {$ENDIF}
-function SAR_11(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 2048'; {$ENDIF}
-function SAR_12(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 4096'; {$ENDIF}
-function SAR_13(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 8192'; {$ENDIF}
-function SAR_14(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 16384'; {$ENDIF}
-function SAR_15(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 32768'; {$ENDIF}
-function SAR_16(Value: Integer): Integer; {$IFDEF USEINLINING} inline; {$ELSE} deprecated 'use div 65536'; {$ENDIF}
+// Note that for PUREPASCAL SAR_n(x) is implemented as (x div 2^n).
+// This works for positive values but not for negative values as both Delphi and FPC
+// compiles (x div 2^n) to:
+//
+//   ADD EAX, $00007FFF
+//   TEST EAX, EAX
+//   JNS :positive
+//   ADD EAX, $0000FFFF
+//   :positive
+//   SAR EAX, n
+//
+function SAR_3(Value: Integer): Integer;
+function SAR_4(Value: Integer): Integer;
+function SAR_6(Value: Integer): Integer;
+function SAR_8(Value: Integer): Integer;
+function SAR_9(Value: Integer): Integer;
+function SAR_11(Value: Integer): Integer;
+function SAR_12(Value: Integer): Integer;
+function SAR_13(Value: Integer): Integer;
+function SAR_14(Value: Integer): Integer;
+function SAR_15(Value: Integer): Integer;
+function SAR_16(Value: Integer): Integer;
 
 { ColorSwap exchanges ARGB <-> ABGR and fills A with $FF }
 function ColorSwap(WinColor: TColor): TColor32;
@@ -178,7 +188,8 @@ uses
 {$IFDEF FPC}
   SysUtils,
 {$ENDIF}
-  GR32_System, GR32_Bindings;
+  GR32_System,
+  GR32_Bindings;
 
 {$R-}{$Q-}  // switch off overflow and range checking
 
@@ -1101,58 +1112,157 @@ end;
 
 { shift right with sign conservation }
 function SAR_3(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 8;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,3
+{$ENDIF}
 end;
 
 function SAR_4(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 16;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,4
+{$ENDIF}
 end;
 
 function SAR_6(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 64;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,6
+{$ENDIF}
 end;
 
 function SAR_8(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 256;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,8
+{$ENDIF}
 end;
 
 function SAR_9(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 512;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,9
+{$ENDIF}
 end;
 
 function SAR_11(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 2048;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,11
+{$ENDIF}
 end;
 
 function SAR_12(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 4096;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,12
+{$ENDIF}
 end;
 
 function SAR_13(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 8192;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,13
+{$ENDIF}
 end;
 
 function SAR_14(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 16384;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,14
+{$ENDIF}
 end;
 
 function SAR_15(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 32768;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,15
+{$ENDIF}
 end;
 
 function SAR_16(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 65536;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,16
+{$ENDIF}
 end;
 
 { Colorswap exchanges ARGB <-> ABGR and fill A with $FF }
