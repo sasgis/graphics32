@@ -37,9 +37,6 @@ interface
 
 {$I GR32.inc}
 
-{-$DEFINE UPDATERECT_DEBUGDRAW}
-{-$DEFINE UPDATERECT_DEBUGDRAW_RANDOM_COLORS}
-
 uses
   System.SysUtils, System.Classes,
   WinAPI.Windows,
@@ -214,14 +211,11 @@ constructor TGDIBackend.Create;
 begin
   inherited;
 
-  FillChar(FBitmapInfo, SizeOf(TBitmapInfo), 0);
-  with FBitmapInfo.bmiHeader do
-  begin
-    biSize := SizeOf(TBitmapInfoHeader);
-    biPlanes := 1;
-    biBitCount := 32;
-    biCompression := BI_RGB;
-  end;
+  FBitmapInfo := Default(TBitmapInfo);
+  FBitmapInfo.bmiHeader.biSize := SizeOf(TBitmapInfoHeader);
+  FBitmapInfo.bmiHeader.biPlanes := 1;
+  FBitmapInfo.bmiHeader.biBitCount := 32;
+  FBitmapInfo.bmiHeader.biCompression := BI_RGB;
 
   FMapHandle := 0;
 
@@ -240,12 +234,9 @@ end;
 
 procedure TGDIBackend.InitializeSurface(NewWidth, NewHeight: Integer; ClearBuffer: Boolean);
 begin
-  with FBitmapInfo.bmiHeader do
-  begin
-    biWidth := NewWidth;
-    biHeight := -NewHeight;
-    biSizeImage := NewWidth * NewHeight * 4;
-  end;
+  FBitmapInfo.bmiHeader.biWidth := NewWidth;
+  FBitmapInfo.bmiHeader.biHeight := -NewHeight; // Bottom-up DIB
+  FBitmapInfo.bmiHeader.biSizeImage := NewWidth * NewHeight * SizeOf(SizeOf(TRGBQuad));
 
   PrepareFileMapping(NewWidth, NewHeight);
 
@@ -611,55 +602,18 @@ begin
 
 end;
 
-{$IFDEF UPDATERECT_DEBUGDRAW}
-const
-  clDebugDrawFill = TColor32($30FF0000);
-  clDebugDrawFrame = TColor32($90FF0000);
-{$ENDIF}
-
 procedure TGDIBackend.DoPaint(ABuffer: TBitmap32; AInvalidRects: TRectList;
   ACanvas: TCanvas; APaintBox: TCustomPaintBox32);
 var
   i: Integer;
-{$IFDEF UPDATERECT_DEBUGDRAW}
-  C1, C2: TColor32;
-  r: TRect;
-{$ENDIF}
 begin
-{$IFDEF UPDATERECT_DEBUGDRAW}
-{$IFDEF UPDATERECT_DEBUGDRAW_RANDOM_COLORS}
-  C1 := Random(MaxInt) AND $00FFFFFF;
-  C2 := C1 OR $90000000;
-  C1 := C1 OR $30000000;
-{$ELSE}
-  C1 := clDebugDrawFill;
-  C2 := clDebugDrawFrame;
-{$ENDIF}
-{$ENDIF}
-
   if AInvalidRects.Count > 0 then
   begin
     for i := 0 to AInvalidRects.Count - 1 do
-    begin
-{$IFDEF UPDATERECT_DEBUGDRAW}
-      r := AInvalidRects[i]^;
-      ABuffer.BeginLockUpdate;
-      ABuffer.FillRectTS(r, C1);
-      ABuffer.FrameRectTS(r, C2);
-      ABuffer.EndLockUpdate;
-{$ENDIF}
       with AInvalidRects[i]^ do
         BitBlt(ACanvas.Handle, Left, Top, Right - Left, Bottom - Top, ABuffer.Handle, Left, Top, SRCCOPY);
-    end;
   end else
   begin
-{$IFDEF UPDATERECT_DEBUGDRAW}
-      r := APaintBox.GetViewportRect;
-      ABuffer.BeginLockUpdate;
-      ABuffer.FillRectTS(r, C1);
-      ABuffer.FrameRectTS(r, C2);
-      ABuffer.EndLockUpdate;
-{$ENDIF}
     with APaintBox.GetViewportRect do
       BitBlt(ACanvas.Handle, Left, Top, Right - Left, Bottom - Top, ABuffer.Handle, Left, Top, SRCCOPY);
   end;
@@ -693,28 +647,24 @@ end;
 constructor TGDIMemoryBackend.Create;
 begin
   inherited;
-  FillChar(FBitmapInfo, SizeOf(TBitmapInfo), 0);
-  with FBitmapInfo.bmiHeader do 
-  begin
-    biSize := SizeOf(TBitmapInfoHeader);
-    biPlanes := 1;
-    biBitCount := 32;
-    biCompression := BI_RGB;
-    biXPelsPerMeter := 96;
-    biYPelsPerMeter := 96;
-    biClrUsed := 0;
-  end;
+
+  FBitmapInfo := Default(TBitmapInfo);
+
+  FBitmapInfo.bmiHeader.biSize := SizeOf(TBitmapInfoHeader);
+  FBitmapInfo.bmiHeader.biPlanes := 1;
+  FBitmapInfo.bmiHeader.biBitCount := 32;
+  FBitmapInfo.bmiHeader.biCompression := BI_RGB;
+  FBitmapInfo.bmiHeader.biXPelsPerMeter := 96;
+  FBitmapInfo.bmiHeader.biYPelsPerMeter := 96;
 end;
 
 procedure TGDIMemoryBackend.InitializeSurface(NewWidth, NewHeight: Integer;
   ClearBuffer: Boolean);
 begin
   inherited;
-  with FBitmapInfo.bmiHeader do 
-  begin
-    biWidth := NewWidth;
-    biHeight := -NewHeight;
-  end;
+
+  FBitmapInfo.bmiHeader.biWidth := NewWidth;
+  FBitmapInfo.bmiHeader.biHeight := -NewHeight; // Bottom-up DIB
 end;
 
 procedure TGDIMemoryBackend.ImageNeeded;
@@ -737,33 +687,35 @@ var
 begin
   if SetDIBitsToDevice(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Right -
     ARect.Left, ARect.Bottom - ARect.Top, ARect.Left, ARect.Top, 0,
-    ARect.Bottom - ARect.Top, ABuffer.Bits, FBitmapInfo, DIB_RGB_COLORS) = 0 then
-  begin
-    // create compatible device context
-    DeviceContext := CreateCompatibleDC(ACanvas.Handle);
-    if DeviceContext <> 0 then
-    try
-      Bitmap := CreateDIBSection(DeviceContext, FBitmapInfo, DIB_RGB_COLORS,
-        Buffer, 0, 0);
+    ARect.Bottom - ARect.Top, ABuffer.Bits, FBitmapInfo, DIB_RGB_COLORS) <> 0 then
+    exit;
 
-      if Bitmap <> 0 then 
-      begin
-        OldObject := SelectObject(DeviceContext, Bitmap);
-        try
-          Move(ABuffer.Bits^, Buffer^, FBitmapInfo.bmiHeader.biWidth *
-            FBitmapInfo.bmiHeader.biHeight * SizeOf(Cardinal));
-          BitBlt(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Right -
-            ARect.Left, ARect.Bottom - ARect.Top, DeviceContext, 0, 0, SRCCOPY);
-        finally
-          if OldObject <> 0 then
-            SelectObject(DeviceContext, OldObject);
-          DeleteObject(Bitmap);
-        end;
-      end else
-        raise EBackend.Create(RCStrCannotCreateCompatibleDC);
+  // create compatible device context
+  DeviceContext := CreateCompatibleDC(ACanvas.Handle);
+
+  if DeviceContext = 0 then
+    exit;
+  try
+
+    Bitmap := CreateDIBSection(DeviceContext, FBitmapInfo, DIB_RGB_COLORS, Buffer, 0, 0);
+
+    if Bitmap = 0 then
+      raise EBackend.Create(RCStrCannotCreateCompatibleDC);
+
+    OldObject := SelectObject(DeviceContext, Bitmap);
+    try
+
+      Move(ABuffer.Bits^, Buffer^, FBitmapInfo.bmiHeader.biWidth * FBitmapInfo.bmiHeader.biHeight * SizeOf(SizeOf(TRGBQuad)));
+      BitBlt(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Right - ARect.Left, ARect.Bottom - ARect.Top, DeviceContext, 0, 0, SRCCOPY);
+
     finally
-      DeleteDC(DeviceContext);
+      if OldObject <> 0 then
+        SelectObject(DeviceContext, OldObject);
+      DeleteObject(Bitmap);
     end;
+
+  finally
+    DeleteDC(DeviceContext);
   end;
 end;
 
@@ -785,37 +737,38 @@ var
   OldObject     : HGDIOBJ;
 begin
   if SetDIBitsToDevice(hDst, DstX, DstY, FOwner.Width, FOwner.Height, 0, 0, 0,
-    FOwner.Height, FBits, FBitmapInfo, DIB_RGB_COLORS) = 0 then
-  begin
-    // create compatible device context
-    DeviceContext := CreateCompatibleDC(hDst);
-    if DeviceContext <> 0 then
-    try
-      Bitmap := CreateDIBSection(DeviceContext, FBitmapInfo, DIB_RGB_COLORS,
-        Buffer, 0, 0);
+    FOwner.Height, FBits, FBitmapInfo, DIB_RGB_COLORS) <> 0 then
+    exit;
 
-      if Bitmap <> 0 then
-      begin
-        OldObject := SelectObject(DeviceContext, Bitmap);
-        try
-          Move(FBits^, Buffer^, FBitmapInfo.bmiHeader.biWidth *
-            FBitmapInfo.bmiHeader.biHeight * SizeOf(Cardinal));
-          BitBlt(hDst, DstX, DstY, FOwner.Width, FOwner.Height, DeviceContext,
-            0, 0, SRCCOPY);
-        finally
-          if OldObject <> 0 then
-            SelectObject(DeviceContext, OldObject);
-          DeleteObject(Bitmap);
-        end;
-      end else
-        raise EBackend.Create(RCStrCannotCreateCompatibleDC);
+  // create compatible device context
+  DeviceContext := CreateCompatibleDC(hDst);
+  if DeviceContext = 0 then
+    exit;
+  try
+    Bitmap := CreateDIBSection(DeviceContext, FBitmapInfo, DIB_RGB_COLORS,
+      Buffer, 0, 0);
+
+    if Bitmap = 0 then
+      raise EBackend.Create(RCStrCannotCreateCompatibleDC);
+
+    OldObject := SelectObject(DeviceContext, Bitmap);
+    try
+
+      Move(FBits^, Buffer^, FBitmapInfo.bmiHeader.biWidth * FBitmapInfo.bmiHeader.biHeight * SizeOf(TRGBQuad));
+      BitBlt(hDst, DstX, DstY, FOwner.Width, FOwner.Height, DeviceContext, 0, 0, SRCCOPY);
+
     finally
-      DeleteDC(DeviceContext);
+      if OldObject <> 0 then
+        SelectObject(DeviceContext, OldObject);
+      DeleteObject(Bitmap);
     end;
+
+  finally
+    DeleteDC(DeviceContext);
   end;
 end;
 
-procedure TGDIMemoryBackend.DrawTo(hDst: HDC; 
+procedure TGDIMemoryBackend.DrawTo(hDst: HDC;
   const DstRect, SrcRect: TRect);
 var
   Bitmap        : HBITMAP;
@@ -826,33 +779,33 @@ begin
   if SetDIBitsToDevice(hDst, DstRect.Left, DstRect.Top,
     DstRect.Right - DstRect.Left, DstRect.Bottom - DstRect.Top, SrcRect.Left,
     SrcRect.Top, 0, SrcRect.Bottom - SrcRect.Top, FBits, FBitmapInfo,
-    DIB_RGB_COLORS) = 0 then
-  begin
-    // create compatible device context
-    DeviceContext := CreateCompatibleDC(hDst);
-    if DeviceContext <> 0 then
-    try
-      Bitmap := CreateDIBSection(DeviceContext, FBitmapInfo, DIB_RGB_COLORS,
-        Buffer, 0, 0);
+    DIB_RGB_COLORS) <> 0 then
+    exit;
 
-      if Bitmap <> 0 then
-      begin
-        OldObject := SelectObject(DeviceContext, Bitmap);
-        try
-          Move(FBits^, Buffer^, FBitmapInfo.bmiHeader.biWidth *
-            FBitmapInfo.bmiHeader.biHeight * SizeOf(Cardinal));
-          BitBlt(hDst, DstRect.Left, DstRect.Top, DstRect.Right -
-            DstRect.Left, DstRect.Bottom - DstRect.Top, DeviceContext, 0, 0, SRCCOPY);
-        finally
-          if OldObject <> 0 then
-            SelectObject(DeviceContext, OldObject);
-          DeleteObject(Bitmap);
-        end;
-      end else
-        raise EBackend.Create(RCStrCannotCreateCompatibleDC);
+  // create compatible device context
+  DeviceContext := CreateCompatibleDC(hDst);
+  if DeviceContext = 0 then
+    raise EBackend.Create(RCStrCannotCreateCompatibleDC);
+  try
+    Bitmap := CreateDIBSection(DeviceContext, FBitmapInfo, DIB_RGB_COLORS, Buffer, 0, 0);
+
+    if Bitmap = 0 then
+      exit;
+
+    OldObject := SelectObject(DeviceContext, Bitmap);
+    try
+
+      Move(FBits^, Buffer^, FBitmapInfo.bmiHeader.biWidth * FBitmapInfo.bmiHeader.biHeight * SizeOf(TRGBQuad));
+      BitBlt(hDst, DstRect.Left, DstRect.Top, DstRect.Right - DstRect.Left, DstRect.Bottom - DstRect.Top, DeviceContext, 0, 0, SRCCOPY);
+
     finally
-      DeleteDC(DeviceContext);
+      if OldObject <> 0 then
+        SelectObject(DeviceContext, OldObject);
+      DeleteObject(Bitmap);
     end;
+
+  finally
+    DeleteDC(DeviceContext);
   end;
 end;
 
