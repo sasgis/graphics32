@@ -48,7 +48,9 @@ uses
 {$ELSE}
   UITypes, Types, Windows,
 {$ENDIF}
-  Controls, Graphics, Classes, SysUtils;
+  Math,
+  Controls, Graphics, Classes, SysUtils,
+  GR32_Bindings;
 
 { Version Control }
 
@@ -531,10 +533,10 @@ function FloatRect(const ARect: TRect): TFloatRect; overload; {$IFDEF USEINLININ
 function FloatRect(const FXR: TFixedRect): TFloatRect; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
 // Some basic operations over rectangles
-function IntersectRect(out Dst: TRect; const R1, R2: TRect): Boolean; overload;
-function IntersectRect(out Dst: TFloatRect; const FR1, FR2: TFloatRect): Boolean; overload;
-function UnionRect(out Rect: TRect; const R1, R2: TRect): Boolean; overload;
-function UnionRect(out Rect: TFloatRect; const R1, R2: TFloatRect): Boolean; overload;
+function IntersectRect(out Dst: TRect; const R1, R2: TRect): Boolean; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function IntersectRect(out Dst: TFloatRect; const FR1, FR2: TFloatRect): Boolean; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function UnionRect(out Rect: TRect; const R1, R2: TRect): Boolean; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function UnionRect(out Rect: TFloatRect; const R1, R2: TFloatRect): Boolean; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 function EqualRect(const R1, R2: TRect): Boolean; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 function EqualRect(const R1, R2: TFloatRect): Boolean; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure InflateRect(var R: TRect; Dx, Dy: Integer); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -1009,6 +1011,7 @@ type
     procedure SetBackend(const ABackend: TCustomBackend); override;
 
     procedure HandleChanged; virtual;
+  protected
     procedure CopyPropertiesTo(Dst: TCustomBitmap32); override;
   public
     class function GetPlatformBackendClass: TCustomBackendClass; override;
@@ -1159,6 +1162,14 @@ var
   // By default, do not include a color table in BI_BITFIELDS BMPs written by SaveToStream/SaveToFile.
   DefaultBitmapIncludeColorTable: boolean = False;
 
+//------------------------------------------------------------------------------
+//
+//      Function bindings
+//
+//------------------------------------------------------------------------------
+function GeneralRegistry: TFunctionRegistry;
+
+
 resourcestring
   RCStrUnmatchedReferenceCounting = 'Unmatched reference counting.';
   RCStrCannotSetSize = 'Can''t set size from ''%s''';
@@ -1167,10 +1178,10 @@ resourcestring
 implementation
 
 uses
-  Math,
   Clipbrd,
   GR32_Blend,
   GR32_LowLevel,
+  GR32_System,
   GR32_Math,
   GR32_Resamplers,
   GR32_Containers,
@@ -1348,7 +1359,7 @@ type
   TGraphicAccess = class(TGraphic);
 
 const
-  ZERO_RECT: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  ZERO_RECT: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0) deprecated 'Use Default(TRect) instead';
 
 { Color construction and conversion functions }
 
@@ -2276,12 +2287,30 @@ end;
 
 function IntersectRect(out Dst: TRect; const R1, R2: TRect): Boolean;
 begin
-  if R1.Left >= R2.Left then Dst.Left := R1.Left else Dst.Left := R2.Left;
-  if R1.Right <= R2.Right then Dst.Right := R1.Right else Dst.Right := R2.Right;
-  if R1.Top >= R2.Top then Dst.Top := R1.Top else Dst.Top := R2.Top;
-  if R1.Bottom <= R2.Bottom then Dst.Bottom := R1.Bottom else Dst.Bottom := R2.Bottom;
+  if R1.Left >= R2.Left then
+    Dst.Left := R1.Left
+  else
+    Dst.Left := R2.Left;
+
+  if R1.Right <= R2.Right then
+    Dst.Right := R1.Right
+  else
+    Dst.Right := R2.Right;
+
+  if R1.Top >= R2.Top then
+    Dst.Top := R1.Top
+  else
+    Dst.Top := R2.Top;
+
+  if R1.Bottom <= R2.Bottom then
+    Dst.Bottom := R1.Bottom
+  else
+    Dst.Bottom := R2.Bottom;
+
   Result := (Dst.Right >= Dst.Left) and (Dst.Bottom >= Dst.Top);
-  if not Result then Dst := ZERO_RECT;
+
+  if not Result then
+    Dst := Default(TRect);
 end;
 
 function IntersectRect(out Dst: TFloatRect; const FR1, FR2: TFloatRect): Boolean;
@@ -2291,7 +2320,8 @@ begin
   Dst.Top    := Math.Max(FR1.Top,    FR2.Top);
   Dst.Bottom := Math.Min(FR1.Bottom, FR2.Bottom);
   Result := (Dst.Right >= Dst.Left) and (Dst.Bottom >= Dst.Top);
-  if not Result then FillLongword(Dst, 4, 0);
+  if not Result then
+    Dst := Default(TFloatRect);
 end;
 
 function IsRectEmpty(const R: TRect): Boolean;
@@ -2309,13 +2339,21 @@ begin
   Rect := R1;
   if not IsRectEmpty(R2) then
   begin
-    if R2.Left < R1.Left then Rect.Left := R2.Left;
-    if R2.Top < R1.Top then Rect.Top := R2.Top;
-    if R2.Right > R1.Right then Rect.Right := R2.Right;
-    if R2.Bottom > R1.Bottom then Rect.Bottom := R2.Bottom;
+    if R2.Left < R1.Left then
+      Rect.Left := R2.Left;
+
+    if R2.Top < R1.Top then
+      Rect.Top := R2.Top;
+
+    if R2.Right > R1.Right then
+      Rect.Right := R2.Right;
+
+    if R2.Bottom > R1.Bottom then
+      Rect.Bottom := R2.Bottom;
   end;
   Result := not IsRectEmpty(Rect);
-  if not Result then Rect := ZERO_RECT;
+  if not Result then
+    Rect := Default(TRect);
 end;
 
 function UnionRect(out Rect: TFloatRect; const R1, R2: TFloatRect): Boolean;
@@ -2323,13 +2361,21 @@ begin
   Rect := R1;
   if not IsRectEmpty(R2) then
   begin
-    if R2.Left < R1.Left then Rect.Left := R2.Left;
-    if R2.Top < R1.Top then Rect.Top := R2.Top;
-    if R2.Right > R1.Right then Rect.Right := R2.Right;
-    if R2.Bottom > R1.Bottom then Rect.Bottom := R2.Bottom;
+    if R2.Left < R1.Left then
+      Rect.Left := R2.Left;
+
+    if R2.Top < R1.Top then
+      Rect.Top := R2.Top;
+
+    if R2.Right > R1.Right then
+      Rect.Right := R2.Right;
+
+    if R2.Bottom > R1.Bottom then
+      Rect.Bottom := R2.Bottom;
   end;
   Result := not IsRectEmpty(Rect);
-  if not Result then FillLongword(Rect, 4, 0);
+  if not Result then
+    Rect := Default(TFloatRect);
 end;
 
 function EqualRect(const R1, R2: TRect): Boolean;
@@ -3027,22 +3073,24 @@ var
 begin
   if not FMeasuringMode then
   begin
-    {$IFDEF FPC}
-    P := Pointer(Bits);
+    // Shift the pointer to 'alpha' component of the first pixel
+    P := pointer(@PColor32Entry(Bits).A);
+
+{$IFDEF FPC}
+
     for I := 0 to Width * Height - 1 do
     begin
-      P^[3] := AlphaValue;
-      Inc(P, 4);
+      P[0] := AlphaValue;
+      Inc(P, SizeOf(TColor32));
     end
-    {$ELSE}
-    P := Pointer(Bits);
-    Inc(P, 3); //shift the pointer to 'alpha' component of the first pixel
+
+{$ELSE}
 
     I := Width * Height;
 
     if I > 16 then
     begin
-      I := I * 4 - 64;
+      I := I * SizeOf(TColor32) - 16*SizeOf(TColor32);
       Inc(P, I);
 
       //16x enrolled loop
@@ -3068,24 +3116,25 @@ begin
       until I > 0;
 
       //eventually remaining bits
-      Dec(I, 64);
+      Dec(I, 16*SizeOf(TColor32));
       while I < 0 do
       begin
-        P^[I + 64] := AlphaValue;
-        Inc(I, 4);
+        P^[I + 16*SizeOf(TColor32)] := AlphaValue;
+        Inc(I, SizeOf(TColor32));
       end;
     end
     else
     begin
       Dec(I);
-      I := I * 4;
+      I := I * SizeOf(TColor32);
       while I >= 0 do
       begin
         P^[I] := AlphaValue;
-        Dec(I, 4);
+        Dec(I, SizeOf(TColor32));
       end;
     end;
-    {$ENDIF}
+
+{$ENDIF}
   end;
   Changed;
 end;
@@ -3532,7 +3581,33 @@ begin
     Exit;
 
   FStippleCounter := FStippleCounter + Delta;
-  FStippleCounter := FStippleCounter - Floor(FStippleCounter / L) * L;
+  FStippleCounter := Wrap(FStippleCounter, L);
+end;
+
+var FastPrevWeight: function(Value: TFloat; PrevIndex: Cardinal): Cardinal;
+
+function FastPrevWeight_Pas(Value: TFloat; PrevIndex: Cardinal): Cardinal;
+begin
+  Result := Round($FF * (Value - PrevIndex));
+end;
+
+function FastPrevWeight_SSE41(Value: TFloat; PrevIndex: Cardinal): Cardinal; experimental;
+// Note: roundss is a SSE4.1 instruction
+const
+  ROUND_MODE = $08 + $00; // $00=Round, $01=Floor, $02=Ceil, $03=Trunc
+const
+  Float255 : TFloat = 255.0;
+asm
+{$if defined(TARGET_x86)}
+        MOVSS   xmm0, Value
+{$ifend}
+        CVTSI2SS xmm1, PrevIndex
+
+        SUBSS   xmm0, xmm1
+        MULSS   xmm0, Float255
+
+        ROUNDSS xmm0, xmm0, ROUND_MODE
+        CVTSS2SI eax, xmm0
 end;
 
 function TCustomBitmap32.GetStippleColor: TColor32;
@@ -3548,17 +3623,22 @@ begin
     Result := clBlack32;
     Exit;
   end;
-  FStippleCounter := Wrap(FStippleCounter, L);
+  WrapMem(FStippleCounter, L);
   {$IFDEF FPC}
   PrevIndex := Trunc(FStippleCounter);
   {$ELSE}
-  PrevIndex := Round(FStippleCounter - 0.5);
+  // Was: PrevIndex := Round(FStippleCounter - 0.5);
+  PrevIndex := FastTrunc(FStippleCounter);
   {$ENDIF}
-  PrevWeight := $FF - Round($FF * (FStippleCounter - PrevIndex));
-  if PrevIndex < 0 then FStippleCounter := L - 1;
+  // Was: PrevWeight= $FF - Round($FF * (FStippleCounter - PrevIndex));
+  PrevWeight := $FF - FastPrevWeight(FStippleCounter, PrevIndex);
+  if PrevIndex < 0 then
+    FStippleCounter := L - 1;
   NextIndex := PrevIndex + 1;
-  if NextIndex >= L then NextIndex := 0;
-  if PrevWeight = $FF then Result := FStipplePattern[PrevIndex]
+  if NextIndex >= L then
+    NextIndex := 0;
+  if PrevWeight = $FF then
+    Result := FStipplePattern[PrevIndex]
   else
   begin
     Result := CombineReg(
@@ -7561,7 +7641,51 @@ begin
   end;
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      Bindings
+//
+//------------------------------------------------------------------------------
+procedure RegisterBindings;
+begin
+  GeneralRegistry.RegisterBinding(@@FastPrevWeight);
+end;
+
+var
+  FGeneralRegistry: TFunctionRegistry = nil;
+
+function GeneralRegistry: TFunctionRegistry;
+begin
+  if (FGeneralRegistry = nil) then
+  begin
+    FGeneralRegistry := NewRegistry('GR32 misc. bindings');
+    RegisterBindings;
+  end;
+  Result := FGeneralRegistry;
+end;
+
+//------------------------------------------------------------------------------
+//
+//      Function bindings
+//
+//------------------------------------------------------------------------------
+procedure RegisterBindingFunctions;
+begin
+  GeneralRegistry.Add(@@FastPrevWeight, @FastPrevWeight_Pas,    BlendBindingFlagPascal);
+{$IFNDEF PUREPASCAL}
+  GeneralRegistry.Add(@@FastPrevWeight, @FastPrevWeight_SSE41,  [isSSE41]);
+{$ENDIF}
+end;
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
 initialization
+  RegisterBindingFunctions;
+  GeneralRegistry.RebindAll;
+
   SetGamma;
   StockBitmap := TBitmap.Create;
   StockBitmap.Width := 8;
