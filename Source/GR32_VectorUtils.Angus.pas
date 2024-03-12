@@ -92,7 +92,6 @@ implementation
 
 uses
   Math,
-//  {$IFDEF FPC}Types, {$ENDIF} {$IFDEF COMPILERXE2_UP}Types, {$ENDIF}
   SysUtils,
 
   GR32_Math,
