@@ -102,15 +102,19 @@
 
   {...}
 
-{$elseif (CompilerVersion < 23.0)}
+{$elseif (CompilerVersion < 23.0)} // Delphi XE2 and later
 
   {$Message Fatal 'Graphics32 only supports Delphi/BCB XE2 (or higher) or Free Pascal / Lazarus'}
 
-{$elseif (CompilerVersion > 36.0)}
+{$elseif (CompilerVersion > 36.0)} // Newer than this file but we'll take it
 
   {$Message Hint 'Unknown compiler version. Assuming compatible with last known version.'}
 
-{$ifend Delphi}
+{$else} // Delphi XE3 and later
+
+  {$LEGACYIFEND ON} // Stupid. Required for XE4+ but introduced in XE3.
+
+{$ifend}
 
 
 
@@ -125,7 +129,9 @@
     call of assembler optimized code.
 *)
 // Note: Inlining is supported by all supported compilers; This define will be deprecated.
+{$if not defined(MEDIOCRE_COMPILER)}
 {$define INLININGSUPPORTED}
+{$ifend}
 
 
 
@@ -260,8 +266,10 @@
 
   If this symbol is defined, Graphics32 will use TGraphics.CanLoadFromStream
   when loading an image format from a stream.
+
+  TGraphics.CanLoadFromStream was introducen in Delphi 10.2
 *)
-{$if defined(COMPILERRX2_UP) or defined(FPC)}
+{$if defined(FPC) or (CompilerVersion >= 32.0)}
   {$define LOADFROMSTREAM}
 {$ifend}
 
@@ -276,11 +284,10 @@
   If this symbol is defined, Graphics32 will alias the TFloatPoint and TFloatRect
   types to the RTL TPointF and TRectF types. Otherwise the types defined in
   GR32 will be used.
+
   The TPointF and TRectF types exists in Delphi XE2 and later, and in FPC.
 *)
-{$if defined(COMPILERXE2_UP) or defined(FPC)}
-  {$define HAS_TPOINTF}
-{$ifend}
+{$define HAS_TPOINTF}
 
 
 
@@ -324,6 +331,8 @@
   {$define RECORD_CLASS_VAR}    // Class vars in record types. Use object type instead.
   {$define CAST_INTF_TO_CLASS}  // Casting an interface to a class.
 
+// 16 byte code alignment required for SSE aligned loads from asm db blocks
+  {$CODEALIGN 16}
 
 {$else}
 (*
@@ -335,7 +344,8 @@
   {$define PLATFORM_INDEPENDENT}
   {$define FPC_HAS_CONSTREF}
   {$define NATIVE_SINCOS}
-  {$define USESTACKALLOC}
+  // 16 byte code alignment required for SSE aligned loads from asm db blocks
+  {$CODEALIGN PROC=16}
 
   {$ifndef WINDOWS}
     {$define RGBA_FORMAT}
@@ -345,6 +355,11 @@
     // Target processor is neither x86 or x64: Use Pascal versions
     {$define PUREPASCAL}
 
+  {$ifend}
+
+  {$if defined(TARGET_x86)}
+    // StackAlloc currently only works with 32-bit FPC
+    {$define USESTACKALLOC}
   {$ifend}
 
 {$ifend}
@@ -358,3 +373,27 @@
 {$R-}{$Q-}  // switch off overflow and range checking
 
 
+
+(*
+  Deprecated defines
+  --------------------------------
+*)
+
+{$if defined(FPC)}
+  {$define COMPILERFPC}
+{$else}
+  {$define COMPILERXE2}
+  {$define COMPILERXE3}
+  {$define COMPILERXE4}
+  {$define COMPILERXE5}
+  {$define COMPILERXE6}
+  {$define COMPILERXE7}
+  {$define COMPILERXE8}
+  {$define COMPILERRX}
+  {$define COMPILERRX1}
+  {$define COMPILERRX2}
+  {$define COMPILERRX3}
+  {$define COMPILERRX4}
+  {$define COMPILERRX5}
+  {$define COMPILERRX6}
+{$ifend}

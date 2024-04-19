@@ -14,7 +14,6 @@ object FormGrow: TFormGrow
   Font.Style = []
   Menu = MainMenu
   Position = poScreenCenter
-  OnCreate = FormCreate
   TextHeight = 13
   object Image: TImage32
     AlignWithMargins = True
@@ -89,8 +88,12 @@ object FormGrow: TFormGrow
           GroupIndex = 2
           RadioItem = True
         end
-        object RoundExjoin1: TMenuItem
+        object RoundExjoin2: TMenuItem
           Action = ActionOptionJoinRoundEx
+          GroupIndex = 2
+        end
+        object RoundExjoin1: TMenuItem
+          Action = ActionOptionJoinSquare
           GroupIndex = 2
           RadioItem = True
         end
@@ -112,6 +115,31 @@ object FormGrow: TFormGrow
         object Action71: TMenuItem
           Action = ActionOptionEndRound
           GroupIndex = 3
+          RadioItem = True
+        end
+      end
+      object N3: TMenuItem
+        Caption = '-'
+        GroupIndex = 1
+      end
+      object Growusing1: TMenuItem
+        Caption = 'Offset using...'
+        GroupIndex = 1
+        object Graphics321: TMenuItem
+          Action = ActionOptionGrowGraphics32
+          AutoCheck = True
+          GroupIndex = 4
+          RadioItem = True
+        end
+        object Image321: TMenuItem
+          Action = ActionOptionGrowAngus
+          AutoCheck = True
+          GroupIndex = 4
+        end
+        object Clipper1: TMenuItem
+          Action = ActionOptionGrowClipper
+          AutoCheck = True
+          GroupIndex = 4
           RadioItem = True
         end
       end
@@ -178,6 +206,14 @@ object FormGrow: TFormGrow
     object ActionOptionJoinRoundEx: TAction
       Tag = 3
       Category = 'Options'
+      Caption = 'RoundEx join'
+      GroupIndex = 2
+      OnExecute = ActionOptionJoinStyleExecute
+      OnUpdate = ActionOptionJoinStyleUpdate
+    end
+    object ActionOptionJoinSquare: TAction
+      Tag = 4
+      Category = 'Options'
       Caption = '&Square join'
       GroupIndex = 2
       OnExecute = ActionOptionJoinStyleExecute
@@ -211,6 +247,31 @@ object FormGrow: TFormGrow
       GroupIndex = 3
       OnExecute = ActionOptionEndStyleExecute
       OnUpdate = ActionOptionEndStyleUpdate
+    end
+    object ActionOptionGrowGraphics32: TAction
+      Category = 'Options'
+      AutoCheck = True
+      Caption = 'Graphics32 reference'
+      Checked = True
+      GroupIndex = 4
+      ShortCut = 32817
+      OnExecute = ActionRedrawExecute
+    end
+    object ActionOptionGrowAngus: TAction
+      Category = 'Options'
+      AutoCheck = True
+      Caption = 'Image32'
+      GroupIndex = 4
+      ShortCut = 32818
+      OnExecute = ActionRedrawExecute
+    end
+    object ActionOptionGrowClipper: TAction
+      Category = 'Options'
+      AutoCheck = True
+      Caption = 'Clipper'
+      GroupIndex = 4
+      ShortCut = 32819
+      OnExecute = ActionRedrawExecute
     end
   end
 end

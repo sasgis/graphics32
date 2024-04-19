@@ -1595,7 +1595,7 @@ begin
 {$ENDIF RGBA_FORMAT}
 end;
 
-procedure Color32ToRGBAMem(var Color32: TColor32); {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure Color32ToRGBAMem(var Color32: TColor32);
 begin
 {$IFNDEF RGBA_FORMAT}
   SwapRedBlueMem(Color32);
@@ -1611,7 +1611,7 @@ begin
 {$ENDIF RGBA_FORMAT}
 end;
 
-procedure BGRAToColor32Mem(var BGRA: DWORD); {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure BGRAToColor32Mem(var BGRA: DWORD);
 begin
 {$IFDEF RGBA_FORMAT}
   SwapRedBlueMem(TColor32(BGRA));
@@ -1627,7 +1627,7 @@ begin
 {$ENDIF RGBA_FORMAT}
 end;
 
-procedure RGBAToColor32mem(var RGBA: DWORD); {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure RGBAToColor32mem(var RGBA: DWORD);
 begin
 {$IFNDEF RGBA_FORMAT}
   SwapRedBlueMem(TColor32(RGBA));
@@ -3650,9 +3650,9 @@ asm
           CALL    TCustomBitmap32.GET_TS256
 {$IFNDEF OMIT_MMX}
           CMP     MMX_ACTIVE.Integer, $00
-          JZ      @Exit
-          DB      $0F, $77               /// EMMS
-@Exit:
+          JZ      @skip_emms
+          EMMS
+@skip_emms:
 {$ENDIF}
 
 {$IFDEF TARGET_x64}
@@ -3767,6 +3767,16 @@ begin
   FStippleCounter := Wrap(FStippleCounter, L);
 end;
 
+{$if defined(PUREPASCAL) or defined(OMIT_SSE2)}
+
+// Just a duplicate of the function below so we at least can get it inlined
+function FastPrevWeight(Value: TFloat; PrevIndex: Cardinal): Cardinal; {$IFDEF USEINLINING} inline; {$ENDIF}
+begin
+  Result := Round($FF * (Value - PrevIndex));
+end;
+
+{$else}
+
 var FastPrevWeight: function(Value: TFloat; PrevIndex: Cardinal): Cardinal;
 
 function FastPrevWeight_Pas(Value: TFloat; PrevIndex: Cardinal): Cardinal;
@@ -3774,7 +3784,7 @@ begin
   Result := Round($FF * (Value - PrevIndex));
 end;
 
-function FastPrevWeight_SSE41(Value: TFloat; PrevIndex: Cardinal): Cardinal; experimental;
+function FastPrevWeight_SSE41(Value: TFloat; PrevIndex: Cardinal): Cardinal; experimental; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 // Note: roundss is a SSE4.1 instruction
 const
   ROUND_MODE = $08 + $00; // $00=Round, $01=Floor, $02=Ceil, $03=Trunc
@@ -3787,15 +3797,17 @@ asm
         CVTSI2SS xmm1, PrevIndex
 
         SUBSS   xmm0, xmm1
-{$ifndef FPC}
+{$if (not defined(FPC)) or (not defined(TARGET_X64))}
         MULSS   xmm0, Float255
 {$else}
-        MULSS   xmm0, [rip+Float255]
-{$endif}
+        MULSS   xmm0, [rip+Float255].DWORD
+{$ifend}
 
         ROUNDSS xmm0, xmm0, ROUND_MODE
         CVTSS2SI eax, xmm0
 end;
+
+{$ifend}
 
 function TCustomBitmap32.GetStippleColor: TColor32;
 var
@@ -3811,12 +3823,8 @@ begin
     Exit;
   end;
   WrapMem(FStippleCounter, L);
-  {$IFDEF FPC}
-  PrevIndex := Trunc(FStippleCounter);
-  {$ELSE}
   // Was: PrevIndex := Round(FStippleCounter - 0.5);
   PrevIndex := FastTrunc(FStippleCounter);
-  {$ENDIF}
   // Was: PrevWeight= $FF - Round($FF * (FStippleCounter - PrevIndex));
   PrevWeight := $FF - FastPrevWeight(FStippleCounter, PrevIndex);
   if PrevIndex < 0 then
@@ -3842,7 +3850,7 @@ begin
   if not FMeasuringMode then
     FillLongword(Bits[X1 + Y * Width], X2 - X1 + 1, Value);
 
-  Changed(MakeRect(X1, Y, X2+1, Y+1));
+  Changed(MakeRect(X1, Y, X2+1, Y+1)); // Don't indicate that this is a line (AREAINFO_LINE). We want it treated as a rectangle.
 end;
 
 procedure TCustomBitmap32.HorzLineS(X1, Y, X2: Integer; Value: TColor32);
@@ -3873,7 +3881,7 @@ begin
     EMMS;
   end;
 
-  Changed(MakeRect(X1, Y, X2+1, Y+1));
+  Changed(MakeRect(X1, Y, X2+1, Y+1)); // Don't indicate that this is a line (AREAINFO_LINE). We want it treated as a rectangle.
 end;
 
 procedure TCustomBitmap32.HorzLineTS(X1, Y, X2: Integer; Value: TColor32);
@@ -3940,7 +3948,7 @@ begin
       end;
     end;
 
-    Changed(MakeRect(X1, Y, X2+1, Y+1));
+    Changed(MakeRect(X1, Y, X2+1, Y+1)); // Don't indicate that this is a line (AREAINFO_LINE). We want it treated as a rectangle.
 
     if (not FMeasuringMode) and (N > 0) then
       AdvanceStippleCounter(N);
@@ -4059,7 +4067,7 @@ begin
 
   end;
 
-  Changed(MakeRect(X, Y1, X+1, Y2+1));
+  Changed(MakeRect(X, Y1, X+1, Y2+1)); // Don't indicate that this is a line (AREAINFO_LINE). We want it treated as a rectangle.
 end;
 
 procedure TCustomBitmap32.VertLineS(X, Y1, Y2: Integer; Value: TColor32);
@@ -4088,7 +4096,7 @@ begin
     EMMS;
   end;
 
-  Changed(MakeRect(X, Y1, X+1, Y2+1));
+  Changed(MakeRect(X, Y1, X+1, Y2+1)); // Don't indicate that this is a line (AREAINFO_LINE). We want it treated as a rectangle.
 end;
 
 procedure TCustomBitmap32.VertLineTS(X, Y1, Y2: Integer; Value: TColor32);
@@ -4155,7 +4163,7 @@ begin
       end;
     end;
 
-    Changed(MakeRect(X, Y1, X+1, Y2+1));
+    Changed(MakeRect(X, Y1, X+1, Y2+1)); // Don't indicate that this is a line (AREAINFO_LINE). We want it treated as a rectangle.
 
     if (not FMeasuringMode) and (N > 0) then
       AdvanceStippleCounter(N);
@@ -7074,7 +7082,7 @@ end;
 
 procedure TCustomBitmap32.Changed;
 begin
-  if ((LockUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) then
+  if ((LockUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) and (not Empty) then
     FOnAreaChanged(Self, BoundsRect, AREAINFO_RECT);
 
   if not FMeasuringMode then
@@ -7083,7 +7091,7 @@ end;
 
 procedure TCustomBitmap32.Changed(const Area: TRect; const Info: Cardinal);
 begin
-  if ((LockUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) then
+  if ((LockUpdateCount = 0) or FMeasuringMode) and Assigned(FOnAreaChanged) and (not Empty) then
     FOnAreaChanged(Self, Area, Info);
 
   if not FMeasuringMode then
@@ -7829,7 +7837,9 @@ end;
 //------------------------------------------------------------------------------
 procedure RegisterBindings;
 begin
+{$if (not defined(PUREPASCAL)) and (not defined(OMIT_SSE2))}
   GeneralRegistry.RegisterBinding(@@FastPrevWeight);
+{$ifend}
 end;
 
 var
@@ -7852,10 +7862,10 @@ end;
 //------------------------------------------------------------------------------
 procedure RegisterBindingFunctions;
 begin
+{$if (not defined(PUREPASCAL)) and (not defined(OMIT_SSE2))}
   GeneralRegistry.Add(@@FastPrevWeight, @FastPrevWeight_Pas,    BlendBindingFlagPascal);
-{$IFNDEF PUREPASCAL}
   GeneralRegistry.Add(@@FastPrevWeight, @FastPrevWeight_SSE41,  [isSSE41]);
-{$ENDIF}
+{$ifend}
 end;
 
 //------------------------------------------------------------------------------

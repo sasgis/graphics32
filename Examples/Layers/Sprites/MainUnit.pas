@@ -83,6 +83,7 @@ type
     PriorityClass, Priority: Integer;
 
     BenchmarkMode: Boolean;
+    TerminateOnCompletion: boolean;
     BenchmarkRun: Cardinal;
     BenchmarkList: TStringList;
 
@@ -102,6 +103,7 @@ implementation
 {$ENDIF}
 
 uses
+  Types,
   System.UITypes,
 {$IFDEF Darwin}
   MacOSAll,
@@ -130,6 +132,12 @@ begin
   LastSeed := 0;
   BenchmarkList := TStringList.Create;
   Application.OnIdle := IdleHandler;
+
+  if (FindCmdLineSwitch('benchmark')) then
+  begin
+    TerminateOnCompletion := True;
+    BtnBenchmark.Click;
+  end;
 end;
 
 procedure TMainForm.AddLayers(Count: Integer);
@@ -179,6 +187,7 @@ var
   i: Integer;
   R: TFloatRect;
   Layer: TBitmapLayer;
+  Alpha: Cardinal;
 begin
   if Image32.Layers.Count = 0 then
     Exit;
@@ -188,7 +197,20 @@ begin
   begin
     Layer := TBitmapLayer(Image32.Layers[i]);
 
-    Layer.Bitmap.MasterAlpha := (Layer.Bitmap.MasterAlpha + 1) mod 256;
+    Alpha := Layer.Bitmap.MasterAlpha;
+
+    if (Alpha = 0) then
+      Layer.Tag := 0
+    else
+    if (Alpha >= 255) then
+      Layer.Tag := 1;
+
+    if (Layer.Tag = 0) then
+      Inc(Alpha)
+    else
+      Dec(Alpha);
+
+    Layer.Bitmap.MasterAlpha := Alpha;
 
     R := Layer.Location;
     with Velocities[i] do
@@ -241,16 +263,20 @@ var
   TimeElapsed: Cardinal;
   Diff: Integer;
   FPS: Single;
+  LocalFormatSettings: TFormatSettings;
 begin
   TimerFPS.Enabled := False;
   TimeElapsed := GetTickCount - LastCheck;
 
+  LocalFormatSettings := FormatSettings;
+  LocalFormatSettings.DecimalSeparator := '.';
+
   FPS := FramesDrawn / (TimeElapsed / 1000);
-  LblFPS.Caption := Format('%.2f fps', [FPS]);
+  LblFPS.Caption := Format('%.2f fps', [FPS], LocalFormatSettings);
 
   if BenchmarkMode then
   begin
-    BenchmarkList.Add(Format('%d ' + #9 + '%.2f', [Image32.Layers.Count, FPS]));
+    BenchmarkList.Add(Format('%d ' + #9 + '%.2f', [Image32.Layers.Count, FPS], LocalFormatSettings));
 
     Diff := 0;  // stop complaining, ye my evil compiler!
 
@@ -271,6 +297,7 @@ begin
     else if Image32.Layers.Count >= 2000 then
     begin
       BtnBenchmarkClick(nil);
+
       Exit;
     end;
 
@@ -279,7 +306,7 @@ begin
 
   FramesDrawn := 0;
   LastCheck := GetTickCount;
-  TimerFPS.Enabled := True;  
+  TimerFPS.Enabled := True;
 end;
 
 procedure TMainForm.Image32Resize(Sender: TObject);
@@ -294,8 +321,9 @@ end;
 
 procedure TMainForm.BtnBenchmarkClick(Sender: TObject);
 begin
-  if BenchmarkMode then
+  if (BenchmarkMode) then
   begin
+
     SetThreadPriority(GetCurrentThread, Priority);
     SetPriorityClass(GetCurrentProcess, PriorityClass);
 
@@ -309,40 +337,50 @@ begin
     BenchmarkMode := False;
     TimerFPS.Interval := 5000;
     BenchmarkList.SaveToFile('Results.txt');
-  end else
-  if (MessageDlg('Do you really want to start benchmarking? ' +
-    'This will take a considerable amount of time.' + #13#10 +
-    'Benchmarking runs with a higher task priority. Your system might become unresponsive for several seconds.',
-    mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
-  begin
-    PriorityClass := GetPriorityClass(GetCurrentProcess);
-    Priority := GetThreadPriority(GetCurrentThread);
 
-    SetPriorityClass(GetCurrentProcess, HIGH_PRIORITY_CLASS);
-    SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_TIME_CRITICAL);
+    if (TerminateOnCompletion) then
+      Application.Terminate; // Queue termination
 
-    BtnBenchmark.Caption := 'Stop';
-
-    CbxUseRepaintOpt.Enabled := False;
-    BtnAdd.Enabled := False;
-    BtnRemove.Enabled := False;
-    BtnClearAll.Enabled := False;
-
-    BenchmarkMode := True;
-    BenchmarkList.Clear;
-    BtnClearAllClick(nil);
-    AddLayers(10);
-    LastCheck := GetTickCount;    
-    TimerFPS.Interval := MAX_RUNS * 5000;
+    TerminateOnCompletion := False;
+    exit;
   end;
+
+  if (not TerminateOnCompletion) then
+  begin
+
+    if (MessageDlg('Do you really want to start benchmarking? ' +
+      'This will take a considerable amount of time.' + #13#13 +
+      'Benchmarking runs with a higher task priority. Your system might become unresponsive for several seconds.'+#13#13+
+      'The applicartion will terminate after the benchmark completes.',
+      mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then
+      exit;
+
+  end;
+
+  PriorityClass := GetPriorityClass(GetCurrentProcess);
+  Priority := GetThreadPriority(GetCurrentThread);
+
+  SetPriorityClass(GetCurrentProcess, HIGH_PRIORITY_CLASS);
+  SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_TIME_CRITICAL);
+
+  BtnBenchmark.Caption := 'Stop';
+
+  CbxUseRepaintOpt.Enabled := False;
+  BtnAdd.Enabled := False;
+  BtnRemove.Enabled := False;
+  BtnClearAll.Enabled := False;
+
+  BenchmarkMode := True;
+  BenchmarkList.Clear;
+  BtnClearAllClick(nil);
+  AddLayers(10);
+  LastCheck := GetTickCount;
+  TimerFPS.Interval := MAX_RUNS * 5000;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   BenchmarkList.Free;
 end;
-
-initialization
-  FormatSettings.DecimalSeparator := '.';
 
 end.

@@ -28,11 +28,6 @@ unit GR32_LowLevel;
  * Portions created by the Initial Developer are Copyright (C) 2000-2009
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   Michael Hansen <dyster_tid@hotmail.com>
- *   Andre Beckedorf <Andre@metaException.de>
- *   Mattias Andersson <mattias@centaurix.com>
- *
  * ***** END LICENSE BLOCK ***** *)
 
 interface
@@ -58,16 +53,31 @@ uses
   GR32,
   GR32_Bindings;
 
-{ Clamp function restricts value to [0..255] range }
+
+//------------------------------------------------------------------------------
+//
+//      Clamp function restricts value to [0..255] range
+//
+//------------------------------------------------------------------------------
 function Clamp(const Value: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ An analogue of FillChar for 32 bit values }
+
+//------------------------------------------------------------------------------
+//
+//      FillLongword: An analogue of FillChar for 32 bit values
+//
+//------------------------------------------------------------------------------
 var FillLongword: procedure(var X; Count: Cardinal; Value: Longword);
 
 procedure FillWord(var X; Count: Cardinal; Value: Longword);
 
 
-{ An analogue of Move for 32 bit values }
+//------------------------------------------------------------------------------
+//
+//      MoveLongword: An analogue of Move optimized for 32 bit values
+//      MoveWord: An analogue of Move optimized for 16 bit values
+//
+//------------------------------------------------------------------------------
 {$IFDEF USEMOVE}
 procedure MoveLongword(const Source; var Dest; Count: Integer); {$IFDEF USEINLINING} inline; {$ENDIF}
 {$ELSE}
@@ -75,55 +85,83 @@ procedure MoveLongword(const Source; var Dest; Count: Integer);
 {$ENDIF}
 procedure MoveWord(const Source; var Dest; Count: Integer);
 
+
+//------------------------------------------------------------------------------
+//
+//      StackAlloc: Allocates a 'small' block of memory on the stack
+//
+//------------------------------------------------------------------------------
 {$IFDEF USESTACKALLOC}
-{ Allocates a 'small' block of memory on the stack }
 function StackAlloc(Size: Integer): Pointer; register;
 
-{ Pops memory allocated by StackAlloc }
+// Pops memory allocated by StackAlloc
 procedure StackFree(P: Pointer); register;
 {$ENDIF}
 
-{ Exchange two 32-bit values }
+
+//------------------------------------------------------------------------------
+//
+//      Swap: Exchange values
+//
+//------------------------------------------------------------------------------
+// Exchange two 32-bit values (except Swap(pointer, pointer))
 procedure Swap(var A, B: Pointer); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure Swap(var A, B: Integer); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure Swap(var A, B: TFixed); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure Swap(var A, B: TColor32); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure Swap32(var A, B); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Convert little-endian <-> big-endian }
-function Swap16(Value: Word): Word; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function Swap32(Value: Cardinal): Cardinal; overload; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function Swap64(Value: Int64): Int64; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+// Convert little-endian <-> big-endian
+function Swap16(Value: Word): Word; {$IFDEF USENATIVECODE} inline; {$ENDIF}
+function Swap32(Value: Cardinal): Cardinal; overload; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function Swap64(Value: Int64): Int64; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Exchange A <-> B only if B < A }
-procedure TestSwap(var A, B: Integer); overload;{$IFDEF USEINLINING} inline; {$ENDIF}
-procedure TestSwap(var A, B: TFixed); overload;{$IFDEF USEINLINING} inline; {$ENDIF}
+// Exchange A <-> B only if B < A
+procedure TestSwap(var A, B: Integer); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+procedure TestSwap(var A, B: TFixed); overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Exchange A <-> B only if B < A then restrict both to [0..Size-1] range }
-{ returns true if resulting range has common points with [0..Size-1] range }
+// Exchange A <-> B only if B < A then restrict both to [0..Size-1] range.
+// Returns true if resulting range has common points with [0..Size-1] range.
 function TestClip(var A, B: Integer; const Size: Integer): Boolean; overload;
 function TestClip(var A, B: Integer; const Start, Stop: Integer): Boolean; overload;
 
-{ Returns value constrained to [Lo..Hi] range}
-function Constrain(const Value, Lo, Hi: Integer): Integer; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
-function Constrain(const Value, Lo, Hi: Single): Single; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
 
-{ Returns value constrained to [min(Constrain1, Constrain2)..max(Constrain1, Constrain2] range}
+//------------------------------------------------------------------------------
+//
+//      Min/Max: Returns min./max. value of A, B and C
+//
+//------------------------------------------------------------------------------
+function Min(const A, B, C: Integer): Integer; overload; {$IFDEF USENATIVECODE} inline; {$ENDIF}
+function Max(const A, B, C: Integer): Integer; overload; {$IFDEF USENATIVECODE} inline; {$ENDIF}
+
+
+//------------------------------------------------------------------------------
+//
+//      Constrain, Clamp: Constrain value to range
+//
+//------------------------------------------------------------------------------
+// Return value constrained to [Lo..Hi] range
+function Constrain(const Value, Lo, Hi: Integer): Integer; overload; {$IFDEF USENATIVECODE} inline; {$ENDIF}
+function Constrain(const Value, Lo, Hi: Single): Single; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+
+// Returns value constrained to [min(Constrain1, Constrain2)..max(Constrain1, Constrain2] range
 function SwapConstrain(const Value: Integer; Constrain1, Constrain2: Integer): Integer;
 
-{ Returns min./max. value of A, B and C }
-function Min(const A, B, C: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-function Max(const A, B, C: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+// Clamp integer value to [0..Max] range
+function Clamp(Value, Max: Integer): Integer; overload; {$IFDEF USENATIVECODE} inline; {$ENDIF}
+// Clamp integer value to [Min..Max] range. Same as Constrain with same parameters.
+function Clamp(Value, Min, Max: Integer): Integer; overload; {$IFDEF USENATIVECODE} inline; {$ENDIF}
 
-{ Clamp integer value to [0..Max] range }
-function Clamp(Value, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
-{ Same but [Min..Max] range }
-function Clamp(Value, Min, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Wrap integer value to [0..Max] range }
-function Wrap(Value, Max: Integer): Integer; overload;
-{ Same but [Min..Max] range. Min is assumed to be <= Max }
-function Wrap(Value, Min, Max: Integer): Integer; overload;
+//------------------------------------------------------------------------------
+//
+//      Wrap: Constrain value to range with wrap around
+//
+//------------------------------------------------------------------------------
+// Wrap integer value to [0..Max] range
+function Wrap(Value, Max: Integer): Integer; overload; {$IFDEF USENATIVECODE} inline; {$ENDIF}
+// Same but [Min..Max] range. Min is assumed to be <= Max
+function Wrap(Value, Min, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
 { Wrap single value to [0..Max) range.
   Basically the same as FloatMod except:
@@ -135,26 +173,38 @@ function Wrap(Value, Max: Single): Single; overload; {$IFDEF USEINLINING} inline
 // Same as Wrap above but Value is by ref and Max is an integer
 procedure WrapMem(var Value: Single; Max: Cardinal); {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Fast Wrap alternatives for cases where range + 1 is a power of two }
-function WrapPow2(Value, Max: Integer): Integer; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
-function WrapPow2(Value, Min, Max: Integer): Integer; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
+// Fast Wrap alternatives for cases where range + 1 is a power of two
+function WrapPow2(Value, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function WrapPow2(Value, Min, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Mirror integer value in [0..Max] range }
+
+//------------------------------------------------------------------------------
+//
+//      Mirror: Constrain value to range with mirroring
+//
+//------------------------------------------------------------------------------
+// Mirror integer value in [0..Max] range
 function Mirror(Value, Max: Integer): Integer; overload;
-{ Same but [Min..Max] range }
+// Mirror integer value in [Min..Max] range
 function Mirror(Value, Min, Max: Integer): Integer; overload;
 
-{ Fast Mirror alternatives for cases where range + 1 is a power of two }
-function MirrorPow2(Value, Max: Integer): Integer; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
-function MirrorPow2(Value, Min, Max: Integer): Integer; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
+// Fast Mirror alternatives for cases where range + 1 is a power of two
+function MirrorPow2(Value, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function MirrorPow2(Value, Min, Max: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Functions to determine appropiate wrap procs (normal or power of 2 optimized)}
-function GetOptimalWrap(Max: Integer): TWrapProc; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
-function GetOptimalWrap(Min, Max: Integer): TWrapProcEx; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
-function GetOptimalMirror(Max: Integer): TWrapProc; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
-function GetOptimalMirror(Min, Max: Integer): TWrapProcEx; {$IFDEF USEINLINING} inline; {$ENDIF} overload;
 
-{ Functions to retrieve correct WrapProc given WrapMode (and range) }
+//------------------------------------------------------------------------------
+//
+//      Clamp/Wrap/Mirror
+//
+//------------------------------------------------------------------------------
+// Functions to determine appropiate wrap procs (normal or power of 2 optimized)
+function GetOptimalWrap(Max: Integer): TWrapProc; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function GetOptimalWrap(Min, Max: Integer): TWrapProcEx; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function GetOptimalMirror(Max: Integer): TWrapProc; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+function GetOptimalMirror(Min, Max: Integer): TWrapProcEx; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
+
+// Functions to retrieve correct WrapProc given WrapMode (and range) }
 function GetWrapProc(WrapMode: TWrapMode): TWrapProc; overload;
 function GetWrapProc(WrapMode: TWrapMode; Max: Integer): TWrapProc; overload;
 function GetWrapProcEx(WrapMode: TWrapMode): TWrapProcEx; overload;
@@ -165,26 +215,45 @@ const
   WRAP_PROCS: array[TWrapMode] of TWrapProc = (Clamp, Wrap, Mirror);
   WRAP_PROCS_EX: array[TWrapMode] of TWrapProcEx = (Clamp, Wrap, Mirror);
 
-{ Fast integer division by 255. Valid for the range [0..$ffff] }
+
+//------------------------------------------------------------------------------
+//
+//      Div255: Fast integer division by 255 with limited range
+//
+//------------------------------------------------------------------------------
+// Fast integer division by 255.
+// Valid for the range [0..$ffff]
 function Div255(Value: Word): Word; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-// Possibly even faster integer division by 255. Valid for the range [0..255*255] }
+// Possibly even faster integer division by 255.
+// Valid for the range [0..255*255] }
 function FastDiv255(Value: Word): Word; experimental; {$IFDEF USEINLINING} inline; {$ENDIF}
 
-{ Fast rounded integer division by 255. Valid for the range [0..255*255] }
+// Fast rounded integer division by 255.
+// Valid for the range [0..255*255]
 function Div255Round(Value: Word): Word; experimental; {$IFDEF USEINLINING} inline; {$ENDIF}
 
 
+//------------------------------------------------------------------------------
+//
+//      FastRound & FastTrunc: Fast alternatives to the RTL Round & Trunc
+//
+//------------------------------------------------------------------------------
 type
-  FastRoundProc = function(Value: TFloat): Integer;
+  TFastRoundProc = function(Value: TFloat): Integer;
 
 var
   // Trunc and Round using SSE
-  FastTrunc: FastRoundProc experimental;
-  FastRound: FastRoundProc experimental;
+  FastTrunc: TFastRoundProc experimental;
+
+  FastRound: TFastRoundProc experimental;
 
 
-{ shift right with sign conservation }
+//------------------------------------------------------------------------------
+//
+//      SAR: Shift right with sign conservation
+//
+//------------------------------------------------------------------------------
 // Note that for PUREPASCAL SAR_n(x) is implemented as (x div 2^n).
 // This works for positive values but not for negative values as both Delphi and FPC
 // compiles (x div 2^n) to:
@@ -196,22 +265,32 @@ var
 //   :positive
 //   SAR EAX, n
 //
-function SAR_3(Value: Integer): Integer;
-function SAR_4(Value: Integer): Integer;
-function SAR_6(Value: Integer): Integer;
-function SAR_8(Value: Integer): Integer;
-function SAR_9(Value: Integer): Integer;
-function SAR_11(Value: Integer): Integer;
-function SAR_12(Value: Integer): Integer;
-function SAR_13(Value: Integer): Integer;
-function SAR_14(Value: Integer): Integer;
-function SAR_15(Value: Integer): Integer;
-function SAR_16(Value: Integer): Integer;
+function SAR_3(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_4(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_6(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_8(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_9(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_11(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_12(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_13(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_14(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_15(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
+function SAR_16(Value: Integer): Integer; {$IFDEF PUREPASCAL} inline; {$ENDIF}
 
-{ ColorSwap exchanges ARGB <-> ABGR and fills A with $FF }
+
+//------------------------------------------------------------------------------
+//
+//      ColorSwap exchanges ARGB <-> ABGR and fills A with $FF
+//
+//------------------------------------------------------------------------------
 function ColorSwap(WinColor: TColor): TColor32;
 
-{CPU target and feature Function templates}
+
+//------------------------------------------------------------------------------
+//
+//      Bindings
+//
+//------------------------------------------------------------------------------
 var
   LowLevelRegistry: TFunctionRegistry;
 
@@ -224,6 +303,10 @@ const
   LowLevelBindingFlagPascal = $0001;
 
 
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
 implementation
 
 uses
@@ -235,6 +318,32 @@ uses
 
 {$R-}{$Q-}  // switch off overflow and range checking
 
+{$IFNDEF PUREPASCAL}
+const
+  // Rounding control values for use with the SSE4.1 ROUNDSS instruction
+  ROUND_TO_NEAREST_INT  = $00; // Round
+  ROUND_TO_NEG_INF      = $01; // Floor
+  ROUND_TO_POS_INF      = $02; // Ceil
+  ROUND_TO_ZERO         = $03; // Trunc
+  ROUND_CUR_DIRECTION   = $04; // Rounds using default from MXCSR register
+
+  ROUND_RAISE_EXC       = $00; // Raise exceptions
+  ROUND_NO_EXC          = $08; // Suppress exceptions
+
+const
+  // SSE MXCSR rounding modes
+  MXCSR_ROUND_MASK    = $FFFF9FFF;
+  MXCSR_ROUND_NEAREST = $00000000;
+  MXCSR_ROUND_DOWN    = $00002000;
+  MXCSR_ROUND_UP      = $00004000;
+  MXCSR_ROUND_TRUNC   = $00006000;
+{$ENDIF}
+
+//------------------------------------------------------------------------------
+//
+//      Clamp
+//
+//------------------------------------------------------------------------------
 function Clamp(const Value: Integer): Integer;
 {$IFDEF USENATIVECODE}
 begin
@@ -261,6 +370,12 @@ asm
 {$ENDIF}
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      FillLongword
+//
+//------------------------------------------------------------------------------
 procedure FillLongword_Pas(var X; Count: Cardinal; Value: Longword);
 var
   I: Integer;
@@ -488,6 +603,12 @@ asm
 end;
 {$ENDIF}
 
+
+//------------------------------------------------------------------------------
+//
+//      FillWord
+//
+//------------------------------------------------------------------------------
 procedure FillWord(var X; Count: Cardinal; Value: LongWord);
 {$IFDEF USENATIVECODE}
 var
@@ -532,6 +653,12 @@ asm
 {$ENDIF}
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      MoveLongword
+//
+//------------------------------------------------------------------------------
 procedure MoveLongword(const Source; var Dest; Count: Integer);
 {$IFDEF USEMOVE}
 begin
@@ -574,6 +701,12 @@ asm
 {$ENDIF}
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      MoveWord
+//
+//------------------------------------------------------------------------------
 procedure MoveWord(const Source; var Dest; Count: Integer);
 {$IFDEF USEMOVE}
 begin
@@ -622,6 +755,12 @@ asm
 {$ENDIF}
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      Swap
+//
+//------------------------------------------------------------------------------
 procedure Swap(var A, B: Pointer);
 var
   T: Pointer;
@@ -630,6 +769,8 @@ begin
   A := B;
   B := T;
 end;
+
+//------------------------------------------------------------------------------
 
 procedure Swap(var A, B: Integer);
 var
@@ -640,6 +781,8 @@ begin
   B := T;
 end;
 
+//------------------------------------------------------------------------------
+
 procedure Swap(var A, B: TFixed);
 var
   T: TFixed;
@@ -648,6 +791,8 @@ begin
   A := B;
   B := T;
 end;
+
+//------------------------------------------------------------------------------
 
 procedure Swap(var A, B: TColor32);
 var
@@ -658,6 +803,8 @@ begin
   B := T;
 end;
 
+//------------------------------------------------------------------------------
+
 procedure Swap32(var A, B);
 var
   T: Integer;
@@ -667,12 +814,10 @@ begin
   Integer(B) := T;
 end;
 
-function Swap16(Value: Word): Word; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-{$IFDEF SUPPORTS_INLINE}
-begin
-  Result := System.Swap(Value);
-{$ELSE}
-{$IFDEF PUREPASCAL}
+//------------------------------------------------------------------------------
+
+function Swap16(Value: Word): Word;
+{$IFDEF USENATIVECODE}
 begin
   Result := System.Swap(Value);
 {$ELSE}
@@ -681,9 +826,10 @@ asm
   MOV     EAX, ECX
   {$ENDIF}
   XCHG    AL, AH
-  {$ENDIF}
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function Swap32(Value: Cardinal): Cardinal;
 {$IFDEF PUREPASCAL}
@@ -701,6 +847,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function Swap64(Value: Int64): Int64;
 type
   TFourWords = array [0..3] of Word;
@@ -710,6 +858,8 @@ begin
   TFourWords(Result)[1] := System.Swap(TFourWords(Value)[2]);
   TFourWords(Result)[0] := System.Swap(TFourWords(Value)[3]);
 end;
+
+//------------------------------------------------------------------------------
 
 procedure TestSwap(var A, B: Integer);
 var
@@ -723,6 +873,8 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+
 procedure TestSwap(var A, B: TFixed);
 var
   T: TFixed;
@@ -735,70 +887,36 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+
 function TestClip(var A, B: Integer; const Size: Integer): Boolean;
 begin
   TestSwap(A, B); // now A = min(A,B) and B = max(A, B)
   if A < 0 then
     A := 0;
-  if B >= Size then 
+  if B >= Size then
     B := Size - 1;
   Result := B >= A;
 end;
 
+//------------------------------------------------------------------------------
+
 function TestClip(var A, B: Integer; const Start, Stop: Integer): Boolean;
 begin
   TestSwap(A, B); // now A = min(A,B) and B = max(A, B)
-  if A < Start then 
+  if A < Start then
     A := Start;
-  if B >= Stop then 
+  if B >= Stop then
     B := Stop - 1;
   Result := B >= A;
 end;
 
-function Constrain(const Value, Lo, Hi: Integer): Integer;
-{$IFDEF USENATIVECODE}
-begin
-  Result := Value;
-  if Result < Lo then
-    Result := Lo
-  else
-  if Result > Hi then
-    Result := Hi;
-{$ELSE}
-{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
-asm
-{$IFDEF TARGET_x64}
-        MOV       EAX,ECX
-        MOV       ECX,R8D
-{$ENDIF}
-        CMP       EDX,EAX
-        CMOVG     EAX,EDX
-        CMP       ECX,EAX
-        CMOVL     EAX,ECX
-{$ENDIF}
-end;
 
-function Constrain(const Value, Lo, Hi: Single): Single; overload;
-begin
-  Result := Value;
-  if Result < Lo then
-    Result := Lo
-  else
-  if Result > Hi then
-    Result := Hi;
-end;
-
-function SwapConstrain(const Value: Integer; Constrain1, Constrain2: Integer): Integer;
-begin
-  TestSwap(Constrain1, Constrain2);
-  Result := Value;
-  if Result < Constrain1 then
-    Result := Constrain1
-  else
-  if Result > Constrain2 then
-    Result := Constrain2;
-end;
-
+//------------------------------------------------------------------------------
+//
+//      Min/Max
+//
+//------------------------------------------------------------------------------
 function Max(const A, B, C: Integer): Integer;
 {$IFDEF USENATIVECODE}
 begin
@@ -822,6 +940,8 @@ asm
         CMOVG     EAX,ECX
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function Min(const A, B, C: Integer): Integer;
 {$IFDEF USENATIVECODE}
@@ -847,6 +967,65 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+//
+//      Constrain
+//
+//------------------------------------------------------------------------------
+function Constrain(const Value, Lo, Hi: Integer): Integer;
+{$IFDEF USENATIVECODE}
+begin
+  Result := Value;
+  if Result < Lo then
+    Result := Lo
+  else
+  if Result > Hi then
+    Result := Hi;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+        MOV       ECX,R8D
+{$ENDIF}
+        CMP       EDX,EAX
+        CMOVG     EAX,EDX
+        CMP       ECX,EAX
+        CMOVL     EAX,ECX
+{$ENDIF}
+end;
+
+//------------------------------------------------------------------------------
+
+function Constrain(const Value, Lo, Hi: Single): Single; overload;
+begin
+  Result := Value;
+  if Result < Lo then
+    Result := Lo
+  else
+  if Result > Hi then
+    Result := Hi;
+end;
+
+//------------------------------------------------------------------------------
+
+function SwapConstrain(const Value: Integer; Constrain1, Constrain2: Integer): Integer;
+begin
+  TestSwap(Constrain1, Constrain2);
+  Result := Value;
+  if Result < Constrain1 then
+    Result := Constrain1
+  else
+  if Result > Constrain2 then
+    Result := Constrain2;
+end;
+
+
+//------------------------------------------------------------------------------
+//
+//      Clamp
+//
+//------------------------------------------------------------------------------
 function Clamp(Value, Max: Integer): Integer;
 {$IFDEF USENATIVECODE}
 begin
@@ -877,6 +1056,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function Clamp(Value, Min, Max: Integer): Integer;
 {$IFDEF USENATIVECODE}
 begin
@@ -900,6 +1081,12 @@ asm
 {$ENDIF}
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      Wrap
+//
+//------------------------------------------------------------------------------
 function Wrap(Value, Max: Integer): Integer;
 {$IFDEF USENATIVECODE}
 begin
@@ -929,6 +1116,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function Wrap(Value, Min, Max: Integer): Integer;
 var
   Range: integer;
@@ -940,6 +1129,8 @@ begin
 
   Result := Min + (Value - Min) mod Range;
 end;
+
+//------------------------------------------------------------------------------
 
 function Wrap(Value, Max: Single): Single;
 var
@@ -965,6 +1156,8 @@ begin
 {$ifend}
 end;
 
+//------------------------------------------------------------------------------
+
 procedure WrapMem(var Value: Single; Max: Cardinal);
 begin
 {$if defined(WRAP_USEFLOATMOD)}
@@ -985,6 +1178,8 @@ begin
     Value := Value + Max;
 {$ifend}
 end;
+
+//------------------------------------------------------------------------------
 
 function DivMod(Dividend, Divisor: Integer; out Remainder: Integer): Integer;
 {$IFDEF USENATIVECODE}
@@ -1015,6 +1210,26 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
+function WrapPow2(Value, Max: Integer): Integer; overload;
+begin
+  Result := Value and Max;
+end;
+
+//------------------------------------------------------------------------------
+
+function WrapPow2(Value, Min, Max: Integer): Integer; overload;
+begin
+  Result := (Value - Min) and (Max - Min) + Min;
+end;
+
+
+//------------------------------------------------------------------------------
+//
+//      Mirror
+//
+//------------------------------------------------------------------------------
 function Mirror(Value, Max: Integer): Integer;
 {$IFDEF USENATIVECODE}
 var
@@ -1053,6 +1268,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function Mirror(Value, Min, Max: Integer): Integer;
 var
   DivResult: Integer;
@@ -1070,15 +1287,7 @@ begin
   if Odd(DivResult) then Result := Max + Min - Result;
 end;
 
-function WrapPow2(Value, Max: Integer): Integer; overload;
-begin
-  Result := Value and Max;
-end;
-
-function WrapPow2(Value, Min, Max: Integer): Integer; overload;
-begin
-  Result := (Value - Min) and (Max - Min) + Min;
-end;
+//------------------------------------------------------------------------------
 
 function MirrorPow2(Value, Max: Integer): Integer; overload;
 begin
@@ -1087,6 +1296,8 @@ begin
   else
     Result := Max - Value and Max;
 end;
+
+//------------------------------------------------------------------------------
 
 function MirrorPow2(Value, Min, Max: Integer): Integer; overload;
 begin
@@ -1099,6 +1310,12 @@ begin
     Result := Max - Value and Result;
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      Clamp/Wrap/Mirror
+//
+//------------------------------------------------------------------------------
 function GetOptimalWrap(Max: Integer): TWrapProc; overload;
 begin
   if (Max >= 0) and IsPowerOf2(Max + 1) then
@@ -1106,6 +1323,8 @@ begin
   else
     Result := Wrap;
 end;
+
+//------------------------------------------------------------------------------
 
 function GetOptimalWrap(Min, Max: Integer): TWrapProcEx; overload;
 begin
@@ -1115,6 +1334,8 @@ begin
     Result := Wrap;
 end;
 
+//------------------------------------------------------------------------------
+
 function GetOptimalMirror(Max: Integer): TWrapProc; overload;
 begin
   if (Max >= 0) and IsPowerOf2(Max + 1) then
@@ -1123,6 +1344,8 @@ begin
     Result := Mirror;
 end;
 
+//------------------------------------------------------------------------------
+
 function GetOptimalMirror(Min, Max: Integer): TWrapProcEx; overload;
 begin
   if (Min >= 0) and (Max >= Min) and IsPowerOf2(Max - Min + 1) then
@@ -1130,6 +1353,8 @@ begin
   else
     Result := Mirror;
 end;
+
+//------------------------------------------------------------------------------
 
 function GetWrapProc(WrapMode: TWrapMode): TWrapProc; overload;
 begin
@@ -1143,6 +1368,8 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+
 function GetWrapProc(WrapMode: TWrapMode; Max: Integer): TWrapProc; overload;
 begin
   case WrapMode of
@@ -1154,6 +1381,8 @@ begin
       Result := Clamp;
   end;
 end;
+
+//------------------------------------------------------------------------------
 
 function GetWrapProcEx(WrapMode: TWrapMode): TWrapProcEx; overload;
 begin
@@ -1167,6 +1396,8 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+
 function GetWrapProcEx(WrapMode: TWrapMode; Min, Max: Integer): TWrapProcEx; overload;
 begin
   case WrapMode of
@@ -1179,6 +1410,12 @@ begin
   end;
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      Div255: Fast integer division by 255 with limited range
+//
+//------------------------------------------------------------------------------
 function Div255(Value: Word): Word;
 begin
 {$if (defined(FPC)) or ((CompilerVersion >= 36.0) and (defined(TARGET_x86)))}
@@ -1192,12 +1429,16 @@ begin
 {$ifend}
 end;
 
+//------------------------------------------------------------------------------
+
 function FastDiv255(Value: Word): Word;
 begin
   // Input is 16 bit, intermediate result is 32-bit (25 used), result is 8 bit
   // Note: Algorithm doesn't take sign into account!
   Result := (Value + ((Value + 257) shr 8)) shr 8;
 end;
+
+//------------------------------------------------------------------------------
 
 function Div255Round(Value: Word): Word;
 begin
@@ -1206,41 +1447,83 @@ begin
   Result := ((Value + 128) * 257) shr 16;
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      FastRound
+//
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// FastRound_Pas
+//------------------------------------------------------------------------------
 function FastRound_Pas(Value: TFloat): Integer;
 begin
   Result := Round(Value);
 end;
 
-function FastRound_SSE41(Value: TFloat): Integer;
-// Note: roundss is a SSE4.1 instruction
-const
-  ROUND_MODE = $08 + $00; // $00=Round, $01=Floor, $02=Ceil, $03=Trunc
+{$IFNDEF PUREPASCAL}
+//------------------------------------------------------------------------------
+// FastRound_SSE41
+//------------------------------------------------------------------------------
+function FastRound_SSE41(Value: TFloat): Integer; {$IFDEF FPC} assembler; {$IFDEF TARGET_X64} nostackframe; {$ENDIF}{$ENDIF}
 asm
 {$if defined(TARGET_x86)}
         MOVSS   xmm0, Value
 {$ifend}
 
-        ROUNDSS xmm0, xmm0, ROUND_MODE
+        ROUNDSS xmm0, xmm0, ROUND_TO_NEAREST_INT or ROUND_NO_EXC
 
         CVTSS2SI eax, xmm0
 end;
+{$ENDIF}
 
+//------------------------------------------------------------------------------
+//
+//      FastTrunc
+//
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// FastTrunc_Pas
+//------------------------------------------------------------------------------
+//
+// Just defer to RTL Trunc
+//
 function FastTrunc_Pas(Value: TFloat): Integer;
 begin
   Result := Trunc(Value);
 end;
 
-function FastTrunc_SSE2(Value: TFloat): Integer;
+{$IFNDEF PUREPASCAL}
+//------------------------------------------------------------------------------
+// FastTrunc_SSE2
+//------------------------------------------------------------------------------
+//
+// Faster that RTL Trunc on x86 and x64
+//
+{$IFNDEF OMIT_SSE2}
+function FastTrunc_SSE2(Value: TFloat): Integer; {$IFDEF FPC} assembler; {$IFDEF TARGET_X64} nostackframe; {$ENDIF}{$ENDIF}
+asm
+{$if defined(TARGET_x86)}
+        MOVSS      XMM0, Value
+{$ifend}
+
+        CVTTSS2SI  EAX, XMM0
+end;
+{$ENDIF}
+
+//------------------------------------------------------------------------------
+// SlowTrunc_SSE2
+//------------------------------------------------------------------------------
+//
+// Faster that RTL Trunc on x64 (and sometimes on x86).
+//
+{$IFNDEF OMIT_SSE2}
+function SlowTrunc_SSE2(Value: TFloat): Integer; {$IFDEF FPC} assembler; {$ENDIF}
 var
   SaveMXCSR: Cardinal;
   NewMXCSR: Cardinal;
-const
-  // SSE MXCSR rounding modes
-  MXCSR_ROUND_MASK    = $FFFF9FFF;
-  MXCSR_ROUND_NEAREST = $00000000;
-  MXCSR_ROUND_DOWN    = $00002000;
-  MXCSR_ROUND_UP      = $00004000;
-  MXCSR_ROUND_TRUNC   = $00006000;
 asm
         XOR     ECX, ECX
 
@@ -1278,21 +1561,32 @@ asm
         LDMXCSR SaveMXCSR
 @SkipRestoreMXCSR:
 end;
+{$ENDIF}
 
-function FastTrunc_SSE41(Value: TFloat): Integer;
-// Note: roundss is a SSE4.1 instruction
-const
-  ROUND_MODE = $08 + $03; // $00=Round, $01=Floor, $02=Ceil, $03=Trunc
+//------------------------------------------------------------------------------
+// FastTrunc_SSE41
+//------------------------------------------------------------------------------
+//
+// Faster that RTL Trunc on x86
+//
+{$IFNDEF OMIT_SSE2}
+function FastTrunc_SSE41(Value: TFloat): Integer; {$IFDEF FPC} assembler; {$IFDEF TARGET_X64} nostackframe; {$ENDIF}{$ENDIF}
 asm
 {$if defined(TARGET_x86)}
         MOVSS   xmm0, Value
 {$ifend}
 
-        ROUNDSS xmm0, xmm0, ROUND_MODE
+        ROUNDSS xmm0, xmm0, ROUND_TO_ZERO or ROUND_NO_EXC
         CVTSS2SI eax, xmm0
 end;
+{$ENDIF}
+{$ENDIF}
 
-{ shift right with sign conservation }
+//------------------------------------------------------------------------------
+//
+//      SAR: Shift right with sign conservation
+//
+//------------------------------------------------------------------------------
 function SAR_3(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
@@ -1306,6 +1600,8 @@ asm
         SAR       EAX,3
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function SAR_4(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
@@ -1321,6 +1617,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function SAR_6(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
@@ -1334,6 +1632,8 @@ asm
         SAR       EAX,6
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function SAR_8(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
@@ -1349,6 +1649,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function SAR_9(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
@@ -1362,6 +1664,8 @@ asm
         SAR       EAX,9
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function SAR_11(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
@@ -1377,6 +1681,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function SAR_12(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
@@ -1390,6 +1696,8 @@ asm
         SAR       EAX,12
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function SAR_13(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
@@ -1405,6 +1713,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function SAR_14(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
@@ -1418,6 +1728,8 @@ asm
         SAR       EAX,14
 {$ENDIF}
 end;
+
+//------------------------------------------------------------------------------
 
 function SAR_15(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
@@ -1433,6 +1745,8 @@ asm
 {$ENDIF}
 end;
 
+//------------------------------------------------------------------------------
+
 function SAR_16(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
@@ -1447,7 +1761,12 @@ asm
 {$ENDIF}
 end;
 
-{ Colorswap exchanges ARGB <-> ABGR and fill A with $FF }
+
+//------------------------------------------------------------------------------
+//
+//      ColorSwap
+//
+//------------------------------------------------------------------------------
 function ColorSwap(WinColor: TColor): TColor32;
 {$IFDEF USENATIVECODE}
 var
@@ -1473,8 +1792,15 @@ asm
 {$ENDIF}
 end;
 
+
+//------------------------------------------------------------------------------
+//
+//      StackAlloc
+//
+//------------------------------------------------------------------------------
 {$IFDEF USESTACKALLOC}
 {$IFDEF PUREPASCAL}
+
 function StackAlloc(Size: Integer): Pointer;
 begin
   GetMem(Result, Size);
@@ -1484,7 +1810,9 @@ procedure StackFree(P: Pointer);
 begin
   FreeMem(P);
 end;
+
 {$ELSE}
+
 { StackAlloc allocates a 'small' block of memory from the stack by
   decrementing SP.  This provides the allocation speed of a local variable,
   but the runtime size flexibility of heap allocated memory.
@@ -1583,8 +1911,15 @@ asm
 {$ENDIF}
 end;
 {$ENDIF}
+
 {$ENDIF}
 
+
+//------------------------------------------------------------------------------
+//
+//      Bindings
+//
+//------------------------------------------------------------------------------
 procedure RegisterBindings;
 begin
   {$WARN SYMBOL_EXPERIMENTAL OFF}
@@ -1609,14 +1944,16 @@ begin
 
 {$IFNDEF OMIT_SSE2}
   LowLevelRegistry.Add(FID_FAST_TRUNC, @FastTrunc_SSE2, [isSSE2]);
-  LowLevelRegistry.Add(FID_FAST_TRUNC, @FastTrunc_SSE41, [isSSE41]);
-
   LowLevelRegistry.Add(FID_FAST_ROUND, @FastRound_SSE41, [isSSE41]);
 {$ENDIF}
 {$ENDIF}
 
   LowLevelRegistry.RebindAll;
 end;
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 initialization
   RegisterBindings;

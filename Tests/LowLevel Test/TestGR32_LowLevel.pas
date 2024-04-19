@@ -35,17 +35,23 @@ interface
 {$I GR32.inc}
 
 {-$DEFINE CheckNegativeInteger}
+{$define FAIL_NOT_IMPLEMENTED} // Fail test if function isn't implemented
 
 // VERIFY_WIN_MULDIV: Validate MulDiv against Windows' MulDiv. Otherwise validates against a floating point emulation.
 // Note though that there's a bug in Windows' MulDiv: https://devblogs.microsoft.com/oldnewthing/20120514-00/?p=7633
+{$ifdef Windows}
 {$define VERIFY_WIN_MULDIV}
+{$endif}
 
 uses
 {$IFDEF FPC}
   fpcunit, testregistry,
 {$ELSE}
-  TestFramework, Windows,
+  TestFramework,
 {$ENDIF}
+{$ifdef Windows}
+  Windows,
+{$endif}
   GR32_Bindings;
 
 // ----------------------------------------------------------------------------
@@ -65,6 +71,8 @@ type
     class function PriorityProcMMX(Info: PFunctionInfo): Integer; static;
     class function PriorityProcSSE2(Info: PFunctionInfo): Integer; static;
     class function PriorityProcSSE41(Info: PFunctionInfo): Integer; static;
+
+    function Rebind(FunctionID: Integer; RequireImplementation: boolean = True): boolean;
   public
     procedure SetUp; override;
     procedure TearDown; override;
@@ -166,6 +174,8 @@ type
     procedure TestPrevPowerOf2;
     procedure TestAverage;
     procedure TestSign;
+    procedure TestFModDouble;
+    procedure TestFModSingle;
     procedure TestFloatModDouble;
     procedure TestFloatModSingle;
     procedure TestFloatRemainderDouble;
@@ -201,38 +211,81 @@ begin
   if (Info^.InstructionSupport = []) then
     Result := 0
   else
-    Result := MaxInt-1;//INVALID_PRIORITY;
+    Result := INVALID_PRIORITY;
 end;
 
 class function TBindingTestCase.PriorityProcMMX(Info: PFunctionInfo): Integer;
 begin
+{$if not defined(PUREPASCAL)}
   if (isMMX in Info^.InstructionSupport) then
     Result := 0
   else
-    Result := MaxInt-1;//INVALID_PRIORITY;
+    Result := INVALID_PRIORITY;
+{$ifend}
 end;
 
 class function TBindingTestCase.PriorityProcSSE2(Info: PFunctionInfo): Integer;
 begin
+{$if not defined(PUREPASCAL)}
   if (isSSE2 in Info^.InstructionSupport) then
     Result := 0
   else
-    Result := MaxInt-1;//INVALID_PRIORITY;
+    Result := INVALID_PRIORITY;
+{$ifend}
 end;
 
 class function TBindingTestCase.PriorityProcSSE41(Info: PFunctionInfo): Integer;
 begin
+{$if not defined(PUREPASCAL)}
   if (isSSE41 in Info^.InstructionSupport) then
     Result := 0
   else
-    Result := MaxInt-1;//INVALID_PRIORITY;
+    Result := INVALID_PRIORITY;
+{$ifend}
+end;
+
+function TBindingTestCase.Rebind(FunctionID: Integer; RequireImplementation: boolean): boolean;
+var
+  Proc: TFunctionPriority;
+begin
+{$ifndef FPC}
+  Proc := pointer(PriorityProc);
+{$else}
+  Proc := PriorityProc;
+{$endif}
+
+  Result := FunctionRegistry.Rebind(FunctionID, pointer(@Proc));
+
+  if (RequireImplementation) and (not Result) then
+  begin
+{$ifndef FPC}
+    Enabled := False;
+{$endif}
+{$ifdef FAIL_NOT_IMPLEMENTED}
+{$ifndef FPC}
+    // Not really an error but we need to indicate that nothing was tested
+    Fail('Not implemented');
+{$else}
+    Ignore('Not implemented');
+{$endif}
+{$endif}
+  end;
 end;
 
 procedure TBindingTestCase.SetUp;
+var
+  Proc: TFunctionPriority;
 begin
   inherited;
   RandSeed := 0;
-  FunctionRegistry.RebindAll(True, pointer(PriorityProc));
+
+{$ifndef FPC}
+  Proc := pointer(PriorityProc);
+{$else}
+  Proc := PriorityProc;
+{$endif}
+
+  FunctionRegistry.RebindAll(True, pointer(@Proc));
 end;
 
 procedure TBindingTestCase.TearDown;
@@ -372,6 +425,12 @@ var
   Value: Single;
   Expected, Actual: Integer;
 begin
+  if (not Rebind(FID_FAST_ROUND)) then
+  begin
+    Check(True);
+    Exit;
+  end;
+
   for i := 1 to 1000 do
   begin
     Value := (Random(10000)-5000) / i;
@@ -392,6 +451,16 @@ procedure TTestLowLevel.TestFastTrunc;
     Value: TFloat;
     Expected, Actual: Integer;
   begin
+    Value := 0.0;
+    Expected := Trunc(Value);
+    Actual := FastTrunc(Value);
+    CheckEquals(Expected, Actual, Format('FastTrunc(%g)', [Value]));
+
+    Value := -0.0;
+    Expected := Trunc(Value);
+    Actual := FastTrunc(Value);
+    CheckEquals(Expected, Actual, Format('FastTrunc(%g)', [Value]));
+
     for i := 1 to 1000 do
     begin
       Value := (Random(10000)-5000) / i;
@@ -408,6 +477,12 @@ var
   SaveMXCSR: DWORD;
   NewMXCSR: DWORD;
 begin
+  if (not Rebind(FID_FAST_TRUNC)) then
+  begin
+    Check(True);
+    Exit;
+  end;
+
   SaveMXCSR := GetMXCSR;
   try
     // Set Mode=Truncation
@@ -495,6 +570,12 @@ const
   CColor32Count: Integer = 1024;  // must be larger than 32!
   CFillValue: array [0..1] of Cardinal = ($12345678, $1337DEAD);
 begin
+  if (not Rebind(FID_FILLLONGWORD)) then
+  begin
+    Check(True);
+    Exit;
+  end;
+
   GetMem(Data, CColor32Count * SizeOf(TColor32));
   try
     // check zero count
@@ -851,6 +932,146 @@ begin
       CheckEquals((X + Y) div 2, Average(X, Y));
 end;
 
+// ----------------------------------------------------------------------------
+// GR32_Math.FMod
+// ----------------------------------------------------------------------------
+
+function FMod_Reference(ANumerator, ADenominator: Double): Double; overload;
+begin
+  Result := ANumerator - ADenominator * Trunc(ANumerator / ADenominator);
+end;
+
+function FMod_Reference(ANumerator, ADenominator: Single): Single; overload;
+begin
+  Result := ANumerator - ADenominator * Trunc(ANumerator / ADenominator);
+end;
+
+procedure TTestMath.TestFModDouble;
+var
+  Numerator, Denominator: Double;
+  Expected, Actual: Double;
+  i: integer;
+const
+  Epsilon = 1e-10;
+begin
+  Denominator := 10;
+  while (Denominator >= -10) do
+  begin
+    Denominator := Denominator - 1.3;
+
+    Numerator := 3 * Denominator;
+    while (Numerator >= -3 * Denominator) do
+    begin
+      Numerator := Numerator - 0.3;
+
+      Actual := GR32_Math.FMod(Numerator, Denominator);
+      Expected := FMod_Reference(Numerator, Denominator);
+
+      CheckEquals(Expected, Actual, Epsilon, Format('FMod(%n, %n)', [Numerator, Denominator]));
+    end;
+  end;
+
+  // Common test cases
+  CheckEquals(5.0, GR32_Math.FMod(5.0, -10.0), Epsilon);
+  CheckEquals(4.5, GR32_Math.FMod(4.5, -10.0), Epsilon);
+  CheckEquals(-5.0, GR32_Math.FMod(-5.0, 10.0), Epsilon);
+  CheckEquals(-4.5, GR32_Math.FMod(-4.5, 10.0), Epsilon);
+
+  // Edge cases
+  CheckEquals(0, GR32_Math.FMod(0, 50), Epsilon);
+  CheckEquals(0.0, GR32_Math.FMod(0.0, 50.5), Epsilon);
+
+  CheckEquals(0, GR32_Math.FMod(50, 50), Epsilon);
+  CheckEquals(0.0, GR32_Math.FMod(50.5, 50.5), Epsilon);
+
+  // Function should produce a saw-tooth
+  Expected := -10;
+  for i := -100 to 100 do
+  begin
+    Actual := GR32_Math.FMod(i * 0.5, 20.0);
+
+    CheckEquals(Expected, Actual, Epsilon, Format('FMod(%n, %n)', [i * 0.5, 20.0]));
+
+    if (i < 0) then
+    begin
+      if (Expected = 0) then
+        Expected := -20;
+      Expected := Expected + 0.5;
+    end else
+    begin
+      Expected := Expected + 0.5;
+      if (Expected = 20) then
+        Expected := 0;
+    end;
+
+  end;
+end;
+
+procedure TTestMath.TestFModSingle;
+var
+  Numerator, Denominator: Single;
+  Expected, Actual: Single;
+  i: integer;
+const
+  Epsilon = 1e-5;
+begin
+  Denominator := 10;
+  while (Denominator >= -10) do
+  begin
+    Denominator := Denominator - 1.3;
+
+    Numerator := 3 * Denominator;
+    while (Numerator >= -3 * Denominator) do
+    begin
+      Numerator := Numerator - 0.3;
+
+      Actual := GR32_Math.FMod(Numerator, Denominator);
+      Expected := FMod_Reference(Numerator, Denominator);
+
+      CheckEquals(Expected, Actual, Epsilon);
+    end;
+  end;
+
+  // Common test cases
+  CheckEquals(5.0, GR32_Math.FMod(5.0, -10.0), Epsilon);
+  CheckEquals(4.5, GR32_Math.FMod(4.5, -10.0), Epsilon);
+  CheckEquals(-5.0, GR32_Math.FMod(-5.0, 10.0), Epsilon);
+  CheckEquals(-4.5, GR32_Math.FMod(-4.5, 10.0), Epsilon);
+
+  // Edge cases
+  CheckEquals(0, GR32_Math.FMod(0, 50), Epsilon);
+  CheckEquals(0.0, GR32_Math.FMod(0.0, 50.5), Epsilon);
+
+  CheckEquals(0, GR32_Math.FMod(50, 50), Epsilon);
+  CheckEquals(0.0, GR32_Math.FMod(50.5, 50.5), Epsilon);
+
+  // Function should produce a saw-tooth
+  Expected := -10;
+  for i := -100 to 100 do
+  begin
+    Actual := GR32_Math.FMod(i * 0.5, 20.0);
+
+    CheckEquals(Expected, Actual, Epsilon, Format('FMod(%n, %n)', [i * 0.5, 20.0]));
+
+    if (i < 0) then
+    begin
+      if (Expected = 0) then
+        Expected := -20;
+      Expected := Expected + 0.5;
+    end else
+    begin
+      Expected := Expected + 0.5;
+      if (Expected = 20) then
+        Expected := 0;
+    end;
+
+  end;
+end;
+
+// ----------------------------------------------------------------------------
+// FloatMod
+// ----------------------------------------------------------------------------
+
 function FloatMod_Reference(ANumerator, ADenominator: Double): Double; overload;
 begin
   if ((ANumerator >= 0) and (ANumerator < ADenominator)) or (ADenominator = 0) then
@@ -983,6 +1204,10 @@ begin
   end;
 end;
 
+// ----------------------------------------------------------------------------
+// FloatRemainder
+// ----------------------------------------------------------------------------
+
 function FloatRemainder_Reference(ANumerator, ADenominator: Double): Double; overload;
 begin
   if ((ANumerator >= 0) and (ANumerator < ADenominator)) or (ADenominator = 0) then
@@ -1086,6 +1311,9 @@ begin
   CheckEquals(0.0, FloatRemainder(50.0, 50.0), Epsilon);
 end;
 
+// ----------------------------------------------------------------------------
+// Hypot
+// ----------------------------------------------------------------------------
 procedure TTestMath.TestHypotFloat;
 var
   X, Y : Integer;
@@ -1120,19 +1348,19 @@ procedure TTestMath.TestIsPowerOf2;
 var
   Index : Integer;
 begin
-  CheckFalse(IsPowerOf2(0), Format('IsPowerOf2(%d))', [0]));
+  CheckFalse(IsPowerOf2(0), Format('IsPowerOf2($%.8X))', [0]));
 
   for Index := 0 to 31 do
   begin
-    CheckTrue(IsPowerOf2(1 shl Index), Format('IsPowerOf2(%d))', [1 shl Index]));
+    CheckTrue(IsPowerOf2(1 shl Index), Format('IsPowerOf2($%.8X))', [1 shl Index]));
 
     if Index > 0 then
     begin
       if Index > 1 then
-        CheckTrue(not IsPowerOf2((1 shl Index) - 1), Format('IsPowerOf2(%d))', [(1 shl Index) - 1]));
+        CheckTrue(not IsPowerOf2((1 shl Index) - 1), Format('IsPowerOf2($%.8X))', [(1 shl Index) - 1]));
 
       if Index < 31 then
-        CheckTrue(not IsPowerOf2((1 shl Index) + 1), Format('IsPowerOf2(%d))', [(1 shl Index) + 1]));
+        CheckTrue(not IsPowerOf2((1 shl Index) + 1), Format('IsPowerOf2($%.8X))', [(1 shl Index) + 1]));
     end;
   end;
 end;
@@ -1141,18 +1369,18 @@ procedure TTestMath.TestNextPowerOf2;
 var
   Index : Integer;
 begin
-  CheckEquals(1, NextPowerOf2(0), Format('NextPowerOf2(%d))', [0]));
+  CheckEquals(1, NextPowerOf2(0), Format('NextPowerOf2($%.8X))', [0]));
 
   for Index := 0 to 30 do
   begin
-    CheckEquals(1 shl Index, NextPowerOf2(1 shl Index), Format('NextPowerOf2(%d))', [1 shl Index]));
+    CheckEquals(1 shl Index, NextPowerOf2(1 shl Index), Format('NextPowerOf2($%.8X))', [1 shl Index]));
 
     if Index > 0 then
     begin
       if Index > 1 then
-        CheckEquals(1 shl Index, NextPowerOf2((1 shl Index) - 1), Format('NextPowerOf2(%d))', [1 shl Index]));
+        CheckEquals(1 shl Index, NextPowerOf2((1 shl Index) - 1), Format('NextPowerOf2($%.8X))', [1 shl Index]));
       if Index < 30 then
-        CheckEquals(1 shl Index, NextPowerOf2((1 shl Index) + 1) shr 1, Format('NextPowerOf2(%d))', [1 shl Index]));
+        CheckEquals(1 shl Index, NextPowerOf2((1 shl Index) + 1) shr 1, Format('NextPowerOf2($%.8X))', [1 shl Index]));
     end;
   end;
 end;
@@ -1161,19 +1389,19 @@ procedure TTestMath.TestPrevPowerOf2;
 var
   Index : Integer;
 begin
-  CheckEquals(0, PrevPowerOf2(0), Format('PrevPowerOf2(%d))', [0]));
+  CheckEquals(0, PrevPowerOf2(0), Format('PrevPowerOf2($%.8X))', [0]));
 
   for Index := 0 to 30 do
   begin
-    CheckEquals(1 shl Index, PrevPowerOf2(1 shl Index), Format('PrevPowerOf2(%d))', [1 shl Index]));
+    CheckEquals(1 shl Index, PrevPowerOf2(1 shl Index), Format('PrevPowerOf2($%.8X))', [1 shl Index]));
 
     if Index > 0 then
     begin
       if Index > 1 then
-        CheckEquals(1 shl Index, PrevPowerOf2((1 shl Index) - 1) shl 1, Format('PrevPowerOf2(%d))', [(1 shl Index)-1]));
+        CheckEquals(1 shl Index, PrevPowerOf2((1 shl Index) - 1) shl 1, Format('PrevPowerOf2($%.8X))', [(1 shl Index)-1]));
 
       if Index < 30 then
-        CheckEquals(1 shl Index, PrevPowerOf2((1 shl Index) + 1), Format('PrevPowerOf2(%d))', [(1 shl Index)+1]));
+        CheckEquals(1 shl Index, PrevPowerOf2((1 shl Index) + 1), Format('PrevPowerOf2($%.8X))', [(1 shl Index)+1]));
     end;
   end;
 end;
@@ -1182,6 +1410,9 @@ procedure TTestMath.TestSign;
 var
   Index : Integer;
 begin
+  CheckEquals(0, GR32_Math.Sign(0));
+  CheckEquals(1, GR32_Math.Sign($7FFFFFFF));
+  CheckEquals(-1, GR32_Math.Sign(Integer($80000000)));
   for Index := 1 to (1 shl 10) do
   begin
     CheckEquals(1, GR32_Math.Sign(Index));
@@ -1464,10 +1695,27 @@ begin
 end;
 
 
+// ----------------------------------------------------------------------------
+//
+// DUnit compatibility for FPC
+//
+// ----------------------------------------------------------------------------
+{$IFDEF FPC}
+procedure RegisterTest(ATest: TTest);
+begin
+  testregistry.RegisterTest('', ATest);
+end;
+{$ENDIF}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
 initialization
 //  RegisterTest(TTestLowLevel.Suite);
 
   RegisterTest(TTestLowLevelPas.Suite);
+{$if not defined(PUREPASCAL)}
   RegisterTest(TTestLowLevelAsm.Suite);
   if isMMX in GR32_System.CPU.InstructionSupport then
     RegisterTest(TTestLowLevelMMX.Suite);
@@ -1475,9 +1723,8 @@ initialization
     RegisterTest(TTestLowLevelSSE2.Suite);
   if isSSE41 in GR32_System.CPU.InstructionSupport then
     RegisterTest(TTestLowLevelSSE41.Suite);
+{$ifend}
 
   RegisterTest(TTestMath.Suite);
 end.
-
-
 

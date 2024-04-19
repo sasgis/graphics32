@@ -335,7 +335,8 @@ end;
 
 procedure TLCLBackend.InvalidateRect(AControl: TWinControl; const ARect: TRect);
 begin
-  Windows.InvalidateRect(AControl.Handle, ARect, False);
+  if (AControl.HandleAllocated) then
+    Windows.InvalidateRect(AControl.Handle, ARect, False);
 end;
 
 procedure TLCLBackend.GetUpdateRects(AControl: TWinControl; AUpdateRects: TRectList; AReservedCapacity: integer; var AFullUpdate: boolean);
@@ -590,6 +591,7 @@ type
 function TLCLBackend.CopyFrom(Graphic: TGraphic): Boolean;
 begin
   TGraphicAccess(Graphic).Draw(Canvas, MakeRect(0, 0, Canvas.Width, Canvas.Height));
+  Result := True;
 end;
 
 
