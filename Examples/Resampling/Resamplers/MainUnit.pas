@@ -23,8 +23,8 @@ unit MainUnit;
  * The Original Code is Resamplers Example
  *
  * The Initial Developer of the Original Code is
- * Michael Hansen <dyster_tid@hotmail.com> 
- * Mattias Andersson <mattias@centaurix.com> 
+ * Michael Hansen <dyster_tid@hotmail.com>
+ * Mattias Andersson <mattias@centaurix.com>
  * (parts of this example were taken from the previously published example,
  * FineResample Example by Alex A. Denisov)
  *
@@ -40,13 +40,11 @@ unit MainUnit;
 interface
 
 {$I GR32.inc}
-{.$DEFINE Ex}
 
 uses
   {$IFNDEF FPC} Windows, {$ELSE} LCLIntf, LCLType, LResources, {$ENDIF}
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
-  ComCtrls, GR32_Image, GR32_System, GR32_RangeBars, GR32, GR32_Resamplers
-  {$IFDEF Ex},GR32_ResamplersEx {$ENDIF};
+  ComCtrls, GR32_Image, GR32_System, GR32_RangeBars, GR32, GR32_Resamplers;
 
 type
   TFrmResamplersExample = class(TForm)
@@ -69,7 +67,7 @@ type
     PnlResampler: TPanel;
     PnlResamplerProperties: TPanel;
     ComboBoxResamplerClassName: TComboBox;
-    ResamplingPaintBox: TPaintBox32;
+    PaintBoxResampling: TPaintBox32;
     TabResampling: TTabSheet;
     SidePanel: TPanel;
     StatusBar: TStatusBar;
@@ -77,19 +75,24 @@ type
     TabKernel: TTabSheet;
     ComboBoxWrapMode: TComboBox;
     PaintBoxCurve: TPaintBox32;
+    TimerTableSize: TTimer;
+    TimerParameter: TTimer;
+    TabStretchTransfer: TTabSheet;
+    PaintBoxStretchTransfer: TPaintBox32;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ImagePatternResize(Sender: TObject);
     procedure ComboBoxPixelAccessModeChange(Sender: TObject);
     procedure GaugeBarParameterChange(Sender: TObject);
-    procedure GaugeBarParameterMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure GaugeBarTableSizeChange(Sender: TObject);
     procedure KernelClassNamesListClick(Sender: TObject);
     procedure ComboBoxKernelModeChange(Sender: TObject);
     procedure ComboBoxResamplerClassNameChange(Sender: TObject);
-    procedure ResamplingPaintBoxResize(Sender: TObject);
+    procedure PaintBoxResamplingPaintBuffer(Sender: TObject);
     procedure PaintBoxCurvePaintBuffer(Sender: TObject);
+    procedure TimerTableSizeTimer(Sender: TObject);
+    procedure TimerParameterTimer(Sender: TObject);
+    procedure PaintBoxStretchTransferPaintBuffer(Sender: TObject);
   private
     procedure SetKernelParameter(Kernel: TCustomKernel);
   protected
@@ -113,20 +116,43 @@ implementation
 {$ENDIF}
 
 uses
-  {$IFDEF FPC}
-  LazJPG,
-  {$ELSE}
-  Jpeg,
-  {$ENDIF}
+  TypInfo,
   Math,
+  GR32.ImageFormats.JPG,
   GR32_LowLevel;
 
 { TfmResamplersExample }
 
 procedure TFrmResamplersExample.FormCreate(Sender: TObject);
+
+  procedure LoadWrapModes;
+  var
+    WrapMode: TWrapMode;
+    s: string;
+  begin
+    ComboBoxWrapMode.Items.Clear;
+    for WrapMode := Low(TWrapMode) to High(TWrapMode) do
+    begin
+      s := GetEnumName(TypeInfo(TWrapMode), Ord(WrapMode));
+      ComboBoxWrapMode.Items.Add(s);
+    end;
+  end;
+
+  procedure LoadPixelAccessModes;
+  var
+    PixelAccessMode: TPixelAccessMode;
+    s: string;
+  begin
+    ComboBoxPixelAccessMode.Items.Clear;
+    for PixelAccessMode := Low(TPixelAccessMode) to High(TPixelAccessMode) do
+    begin
+      s := GetEnumName(TypeInfo(TPixelAccessMode), Ord(PixelAccessMode));
+      ComboBoxPixelAccessMode.Items.Add(s);
+    end;
+  end;
+
 var
   ResStream: TResourceStream;
-  JPEG: TJPEGImage;
 begin
   BitmapPattern := TBitmap32.Create;
   BitmapPattern.OuterColor := $FFFF7F7F;
@@ -138,28 +164,29 @@ begin
   BitmapSource := TBitmap32.Create;
 
   // load example image
-  JPEG := TJPEGImage.Create;
+  ResStream := TResourceStream.Create(HInstance, 'Iceland', RT_RCDATA);
   try
-    ResStream := TResourceStream.Create(HInstance, 'Iceland', RT_RCDATA);
-    try
-      JPEG.LoadFromStream(ResStream);
-    finally
-      ResStream.Free;
-    end;
-    BitmapSource.Assign(JPEG);
+    BitmapSource.LoadFromStream(ResStream);
   finally
-    JPEG.Free;
+    ResStream.Free;
   end;
 
   ResamplerList.GetClassNames(ComboBoxResamplerClassName.Items);
   KernelList.GetClassNames(ComboBoxKernelClassName.Items);
+  LoadWrapModes;
+  LoadPixelAccessModes;
+
   ComboBoxResamplerClassName.ItemIndex := 0;
+  ComboBoxWrapMode.ItemIndex := Ord(wmClamp);
+  ComboBoxPixelAccessMode.ItemIndex := Ord(pamSafe);
   ComboBoxKernelClassName.ItemIndex := 0;
+
 
   // build 16 x 16 test bitmap
   BuildTestBitmap(BitmapPattern);
 
-  ResamplingPaintBox.BufferOversize := 0;
+  PaintBoxResampling.BufferOversize := 0;
+  PaintBoxStretchTransfer.BufferOversize := 0;
 end;
 
 procedure TFrmResamplersExample.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -218,22 +245,23 @@ begin
   Index := ComboBoxKernelClassName.ItemIndex;
   KernelResampler := TKernelResampler(BitmapPattern.Resampler);
 
-  KernelResampler.Kernel := TCustomKernelClass(KernelList[Index]).Create;
+  BitmapPattern.BeginUpdate;
+  try
 
-  LblParameter.Visible := (KernelResampler.Kernel is TAlbrechtKernel) or
-{$IFDEF Ex}
-    (KernelResampler.Kernel is TGaussianKernel) or
-    (KernelResampler.Kernel is TKaiserBesselKernel) or
-    (KernelResampler.Kernel is TNutallKernel) or
-    (KernelResampler.Kernel is TBurgessKernel) or
-    (KernelResampler.Kernel is TBlackmanHarrisKernel) or
-    (KernelResampler.Kernel is TLawreyKernel) or
-{$ENDIF}
-    (KernelResampler.Kernel is TSinshKernel);
-  GaugeBarParameter.Visible := LblParameter.Visible;
+    KernelResampler.Kernel := TCustomKernelClass(KernelList[Index]).Create;
 
-  SetKernelParameter(KernelResampler.Kernel);
+    LblParameter.Visible :=
+      (KernelResampler.Kernel is TAlbrechtKernel) or
+      (KernelResampler.Kernel is TGaussianKernel) or
+      (KernelResampler.Kernel is TSinshKernel);
+    GaugeBarParameter.Visible := LblParameter.Visible;
 
+    SetKernelParameter(KernelResampler.Kernel);
+    ComboBoxKernelModeChange(nil);
+
+  finally
+    BitmapPattern.EndUpdate;
+  end;
   PaintBoxCurve.Invalidate;
 end;
 
@@ -294,6 +322,15 @@ begin
   end;
 end;
 
+procedure TFrmResamplersExample.PaintBoxStretchTransferPaintBuffer(Sender: TObject);
+begin
+  Screen.Cursor := crAppStart;
+  GlobalPerfTimer.Start;
+  BitmapPattern.DrawTo(TPaintBox32(Sender).Buffer, TPaintBox32(Sender).Buffer.BoundsRect);
+  StatusBar.Panels[0].Text := GlobalPerfTimer.ReadMilliseconds + ' ms for resampling.';
+  Screen.Cursor := crDefault;
+end;
+
 procedure TFrmResamplersExample.ComboBoxResamplerClassNameChange(Sender: TObject);
 var
   Resampler: TCustomResampler;
@@ -303,12 +340,14 @@ begin
 
   BitmapPattern.BeginUpdate;
   try
+
     Resampler := TCustomResamplerClass(ResamplerList[ComboBoxResamplerClassName.ItemIndex]).Create(BitmapPattern);
     KernelClassNamesListClick(nil);
+    ComboBoxPixelAccessModeChange(nil);
+
   finally
     BitmapPattern.EndUpdate;
   end;
-  BitmapPattern.Changed;
 
   PanelKernel.Visible := (Resampler is TKernelResampler);
   TabKernel.TabVisible := (Resampler is TKernelResampler);
@@ -324,30 +363,44 @@ procedure TFrmResamplersExample.BitmapPatternChanged(Sender: TObject);
 var
   X, Y: Integer;
   sw, sh: Single;
+  HasResampled: boolean;
 begin
   sw := BitmapPattern.Width / ImagePattern.Bitmap.Width;
   sh := BitmapPattern.Height / ImagePattern.Bitmap.Height;
 
+  HasResampled := False;
+  Screen.Cursor := crAppStart;
   GlobalPerfTimer.Start;
 
   if TabResampling.Visible then
-    ResamplingPaintBoxResize(Self)
+  begin
+    PaintBoxResampling.Invalidate;
+  end else
+  if TabStretchTransfer.Visible then
+    PaintBoxStretchTransfer.Invalidate
   else
   if BitmapPattern.WrapMode in [wmClamp, wmRepeat, wmMirror] then
   begin
     // manual resampling
     BitmapPattern.Resampler.PrepareSampling;
+    try
 
-    for Y := 0 to ImagePattern.Bitmap.Height - 1 do
-      for X := 0 to ImagePattern.Bitmap.Width - 1 do
-        ImagePattern.Bitmap.Pixel[X, Y] := BitmapPattern.Resampler.GetSampleFloat(X * sw - 0.5, Y * sh - 0.5);
+      for Y := 0 to ImagePattern.Bitmap.Height - 1 do
+        for X := 0 to ImagePattern.Bitmap.Width - 1 do
+          ImagePattern.Bitmap.Pixel[X, Y] := BitmapPattern.Resampler.GetSampleFloat(X * sw - 0.5, Y * sh - 0.5);
 
-    BitmapPattern.Resampler.FinalizeSampling;
+    finally
+      BitmapPattern.Resampler.FinalizeSampling;
+    end;
+
+    ImagePattern.Invalidate;
+    HasResampled := True;
   end;
 
-  StatusBar.Panels[0].Text := GlobalPerfTimer.ReadMilliseconds + ' ms for rendering.';
+  if (HasResampled) then
+    StatusBar.Panels[0].Text := GlobalPerfTimer.ReadMilliseconds + ' ms for resampling.';
 
-  ImagePattern.Repaint;
+  Screen.Cursor := crDefault;
 end;
 
 procedure TFrmResamplersExample.ComboBoxKernelModeChange(Sender: TObject);
@@ -355,31 +408,31 @@ begin
   if (ComboBoxKernelMode.ItemIndex >= 0) and (BitmapPattern.Resampler is TKernelResampler) then
   begin
     TKernelResampler(BitmapPattern.Resampler).KernelMode := TKernelMode(ComboBoxKernelMode.ItemIndex);
-    KernelClassNamesListClick(Self);
   end;
 end;
 
 procedure TFrmResamplersExample.ComboBoxPixelAccessModeChange(Sender: TObject);
 begin
   // Note: This event handler is shared by ComboBoxWrapMode and ComboBoxPixelAccessMode
-  BitmapPattern.WrapMode := TWrapMode(ComboBoxWrapMode.ItemIndex);
-  TCustomResampler(BitmapPattern.Resampler).PixelAccessMode := TPixelAccessMode(ComboBoxPixelAccessMode.ItemIndex);
+  BitmapPattern.BeginUpdate;
+  try
+    BitmapPattern.WrapMode := TWrapMode(ComboBoxWrapMode.ItemIndex);
+    TCustomResampler(BitmapPattern.Resampler).PixelAccessMode := TPixelAccessMode(ComboBoxPixelAccessMode.ItemIndex);
+  finally
+    BitmapPattern.EndUpdate;
+  end;
 end;
 
 procedure TFrmResamplersExample.GaugeBarParameterChange(Sender: TObject);
 begin
-  if BitmapPattern.Resampler is TKernelResampler then
-    SetKernelParameter(TKernelResampler(BitmapPattern.Resampler).Kernel);
-end;
-
-procedure TFrmResamplersExample.GaugeBarParameterMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  KernelClassNamesListClick(Sender);
+  TimerParameter.Enabled := False;
+  TimerParameter.Enabled := (BitmapPattern.Resampler is TKernelResampler);
 end;
 
 procedure TFrmResamplersExample.GaugeBarTableSizeChange(Sender: TObject);
 begin
+  TimerTableSize.Enabled := False;
+  TimerTableSize.Enabled := (BitmapPattern.Resampler is TKernelResampler);
   LblTableSize.Caption := Format('Table Size (%d/100):', [GaugeBarTableSize.Position]);
 end;
 
@@ -400,29 +453,25 @@ begin
   else
   if Kernel is TGaussianKernel then
     TGaussianKernel(Kernel).Sigma := GaugeBarParameter.Position * 0.1 + 1
-{$IFDEF Ex}
-  else
-  if Kernel is TKaiserBesselKernel then
-    TKaiserBesselKernel(Kernel).Alpha := GaugeBarParameter.Position * 0.1 + 1
-  else
-  if Kernel is TNutallKernel then
-    TNutallKernel(Kernel).ContinousDerivationType := TCDType(GaugeBarParameter.Position > 50)
-  else
-  if Kernel is TBurgessKernel then
-    TBurgessKernel(Kernel).BurgessOpt := TBurgessOpt(GaugeBarParameter.Position > 50)
-  else
-  if Kernel is TBlackmanHarrisKernel then
-    TBlackmanHarrisKernel(Kernel).Terms := Round(GaugeBarParameter.Position * 0.1) + 1
-  else
-  if Kernel is TLawreyKernel then
-    TLawreyKernel(Kernel).Terms := Round(GaugeBarParameter.Position * 0.1) + 1
-{$ENDIF}
   else
   if Kernel is TSinshKernel then
     TSinshKernel(Kernel).Coeff := 20 / GaugeBarParameter.Position;
 end;
 
-procedure TFrmResamplersExample.ResamplingPaintBoxResize(Sender: TObject);
+procedure TFrmResamplersExample.TimerParameterTimer(Sender: TObject);
+begin
+  TimerParameter.Enabled := False;
+  SetKernelParameter(TKernelResampler(BitmapPattern.Resampler).Kernel);
+  PaintBoxCurve.Invalidate;
+end;
+
+procedure TFrmResamplersExample.TimerTableSizeTimer(Sender: TObject);
+begin
+  TimerTableSize.Enabled := False;
+  TKernelResampler(BitmapPattern.Resampler).TableSize := GaugeBarTableSize.Position;
+end;
+
+procedure TFrmResamplersExample.PaintBoxResamplingPaintBuffer(Sender: TObject);
 
   procedure SetupResampler(Bitmap:TBitmap32);
   var
@@ -451,44 +500,51 @@ begin
   if not TabResampling.Visible then
     Exit;
 
+  Screen.Cursor := crAppStart;
+
   SmallerBitmap := TBitmap32.Create;
   try
     SetupResampler(SmallerBitmap);
     SetupResampler(BitmapSource);
 
-    ResamplingPaintBox.Buffer.BeginUpdate;
+    GlobalPerfTimer.Start;
+
+    PaintBoxResampling.Buffer.BeginUpdate;
     try
       // Shrink
-      ScaleRatioX := ResamplingPaintBox.Buffer.Width / (3 * BitmapSource.Width);
-      ScaleRatioY := ResamplingPaintBox.Buffer.Height / (4 * BitmapSource.Height);
+      ScaleRatioX := PaintBoxResampling.Buffer.Width / (3 * BitmapSource.Width);
+      ScaleRatioY := PaintBoxResampling.Buffer.Height / (4 * BitmapSource.Height);
       SmallerBitmap.SetSize(Round(BitmapSource.Width * ScaleRatioX), Round(BitmapSource.Height * ScaleRatioY));
       // Draw source to SmallerBitmap using resamler
       SmallerBitmap.Draw(SmallerBitmap.BoundsRect, BitmapSource.BoundsRect, BitmapSource);
       // Draw SmallerBitmap to paint box, centered horizontally
       // We're drawing 1:1 so no resampling done here
-      ResamplingPaintBox.Buffer.Draw((ResamplingPaintBox.Buffer.Width - SmallerBitmap.Width) div 2, 10, SmallerBitmap);
+      PaintBoxResampling.Buffer.Draw((PaintBoxResampling.Buffer.Width - SmallerBitmap.Width) div 2, 10, SmallerBitmap);
 
       // Expand
       // Note that we're expanding the bitmap we just shrunk so the result
       // will exacerbate any precision loss caused by the resampling. This
       // is done on purpose in order to make any quality loss more visible.
-      ScaleRatioX := (ResamplingPaintBox.Buffer.Width - 20) / BitmapSource.Width;
-      ScaleRatioY := (((ResamplingPaintBox.Buffer.Height - 20) * 0.25) * 3) / (BitmapSource.Height);
+      ScaleRatioX := (PaintBoxResampling.Buffer.Width - 20) / BitmapSource.Width;
+      ScaleRatioY := (((PaintBoxResampling.Buffer.Height - 20) * 0.25) * 3) / (BitmapSource.Height);
       ExpandWidth := Round(BitmapSource.Width * ScaleRatioX);
       ExpandHeight := Round(BitmapSource.Height * ScaleRatioY);
-      R.Left := (ResamplingPaintBox.Buffer.Width - ExpandWidth) div 2;
+      R.Left := (PaintBoxResampling.Buffer.Width - ExpandWidth) div 2;
       R.Right := R.Left + ExpandWidth;
       R.Top := SmallerBitmap.Height + 20;
       R.Bottom := SmallerBitmap.Height + 5 + ExpandHeight;
       // Draw SmallerBitmap to paintbox using resamler, centered horizontally
-      ResamplingPaintBox.Buffer.Draw(R, SmallerBitmap.BoundsRect, SmallerBitmap);
+      PaintBoxResampling.Buffer.Draw(R, SmallerBitmap.BoundsRect, SmallerBitmap);
     finally
-      ResamplingPaintBox.Buffer.EndUpdate;
+      PaintBoxResampling.Buffer.EndUpdate;
     end;
+
+    StatusBar.Panels[0].Text := GlobalPerfTimer.ReadMilliseconds + ' ms for rendering.';
+
   finally
     SmallerBitmap.Free;
   end;
-  ResamplingPaintBox.Repaint;
+  Screen.Cursor := crDefault;
 end;
 
 end.
