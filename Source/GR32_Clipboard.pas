@@ -40,6 +40,7 @@ interface
 {$I GR32.inc}
 
 uses
+  Types,
   Classes,
 {$ifdef FPC}
   LCLType,

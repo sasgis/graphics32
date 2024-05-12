@@ -146,6 +146,9 @@ begin
 {$if defined(GR32_CLIPBOARD_PNG)}
   if (Source is TClipboard) then
   begin
+    if (not Clipboard.HasFormat(CF_PNG)) then
+      Exit(False);
+
     Dest.BeginUpdate;
     try
 {$ifndef FPC}
@@ -187,6 +190,11 @@ begin
   Result := Result or (Dest is TClipboard);
 {$ifend}
 end;
+
+{$ifdef FPC}
+type
+  TMemoryStreamCracker = class(TMemoryStream);
+{$endif FPC}
 
 function TImageFormatAdapterPNG32.AssignTo(Source: TCustomBitmap32; Dest: TPersistent): boolean;
 var

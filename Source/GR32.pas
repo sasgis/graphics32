@@ -1153,7 +1153,8 @@ type
     function  TextExtent(const Text: string): TSize;
     function  TextHeight(const Text: string): Integer;
     function  TextWidth(const Text: string): Integer;
-    procedure RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32); // TODO : Deprecate AALevel; Replace with AntiAlias: boolean
+    procedure RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32); overload; deprecated 'Use RenderText(...; AntiAlias: boolean) or TCanvas32.RenderText(...) instead';
+    procedure RenderText(X, Y: Integer; const Text: string; Color: TColor32; AntiAlias: boolean = True); overload;
 
     property  Canvas: TCanvas read GetCanvas;
     function  CanvasAllocated: Boolean;
@@ -3439,10 +3440,10 @@ begin
   if FCombineMode = cmBlend then
   begin
     A := C shr 24;  // opacity
-    celx := A * GAMMA_ENCODING_TABLE[flrx xor $FF];
-    cely := GAMMA_ENCODING_TABLE[flry xor $FF];
-    flrx := A * GAMMA_ENCODING_TABLE[flrx];
-    flry := GAMMA_ENCODING_TABLE[flry];
+    celx := A * (flrx xor $FF);
+    cely := flry xor $FF;
+    flrx := A * flrx;
+    flry := flry;
 
     CombineMem(C, P^, celx * cely shr 16); Inc(P);
     CombineMem(C, P^, flrx * cely shr 16); Inc(P, FWidth);
@@ -3451,10 +3452,10 @@ begin
   end
   else
   begin
-    celx := GAMMA_ENCODING_TABLE[flrx xor $FF];
-    cely := GAMMA_ENCODING_TABLE[flry xor $FF];
-    flrx := GAMMA_ENCODING_TABLE[flrx];
-    flry := GAMMA_ENCODING_TABLE[flry];
+    celx := flrx xor $FF;
+    cely := flry xor $FF;
+    flrx := flrx;
+    flry := flry;
 
     CombineMem(MergeReg(C, P^), P^, celx * cely shr 8); Inc(P);
     CombineMem(MergeReg(C, P^), P^, flrx * cely shr 8); Inc(P, FWidth);
@@ -3492,10 +3493,10 @@ begin
   if FCombineMode = cmBlend then
   begin
     A := C shr 24;  // opacity
-    celx := A * GAMMA_ENCODING_TABLE[flrx xor $FF];
-    cely := GAMMA_ENCODING_TABLE[flry xor $FF];
-    flrx := A * GAMMA_ENCODING_TABLE[flrx];
-    flry := GAMMA_ENCODING_TABLE[flry];
+    celx := A * (flrx xor $FF);
+    cely := flry xor $FF;
+    flrx := A * flrx;
+    flry := flry;
 
     if (X >= FClipRect.Left) and (Y >= FClipRect.Top) and
        (X < FClipRect.Right - 1) and (Y < FClipRect.Bottom - 1) then
@@ -3516,10 +3517,10 @@ begin
   end
   else
   begin
-    celx := GAMMA_ENCODING_TABLE[flrx xor $FF];
-    cely := GAMMA_ENCODING_TABLE[flry xor $FF];
-    flrx := GAMMA_ENCODING_TABLE[flrx];
-    flry := GAMMA_ENCODING_TABLE[flry];
+    celx := flrx xor $FF;
+    cely := flry xor $FF;
+    flrx := flrx;
+    flry := flry;
 
     if (X >= FClipRect.Left) and (Y >= FClipRect.Top) and
        (X < FClipRect.Right - 1) and (Y < FClipRect.Bottom - 1) then
@@ -3620,32 +3621,19 @@ var
   Pos: Integer;
 begin
   Pos := (X shr 8) + (Y shr 8) * FWidth;
-  Result := Interpolator(GAMMA_ENCODING_TABLE[X and $FF xor $FF],
-                         GAMMA_ENCODING_TABLE[Y and $FF xor $FF],
+  Result := Interpolator(X and $FF xor $FF,
+                         Y and $FF xor $FF,
                          @Bits[Pos], @Bits[Pos + FWidth]);
 end;
 
 function TCustomBitmap32.GET_TS256(X, Y: Integer): TColor32;
-var
-  Width256, Height256: Integer;
 begin
-  if (X >= F256ClipRect.Left) and (Y >= F256ClipRect.Top) then
-  begin
-    Width256 := (FClipRect.Right - 1) shl 8;
-    Height256 := (FClipRect.Bottom - 1) shl 8;
-
-    if (X < Width256) and (Y < Height256) then
-      Result := GET_T256(X,Y)
-    else if (X = Width256) and (Y <= Height256) then
-      // We're exactly on the right border: no need to interpolate.
-      Result := Pixel[FClipRect.Right - 1, Y shr 8]
-    else if (X <= Width256) and (Y = Height256) then
-      // We're exactly on the bottom border: no need to interpolate.
-      Result := Pixel[X shr 8, FClipRect.Bottom - 1]
-    else
-      Result := FOuterColor;
-  end
+  if (X >= F256ClipRect.Left) and (Y >= F256ClipRect.Top) and
+     (X < F256ClipRect.Right-256) and (Y < F256ClipRect.Bottom-256) then
+    // (x+1, y+1) is inside cliprect
+    Result := GET_T256(X,Y)
   else
+    // Outside cliprect
     Result := FOuterColor;
 end;
 
@@ -4038,10 +4026,10 @@ begin
     Count := X2F - X1F - 1;
     if Wy > 0 then
     begin
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wy * Wx1) shr 24]);
+      CombineMem(Value, PDst^, (Wy * Wx1) shr 24);
       Inc(PDst);
 
-      Wt := GAMMA_ENCODING_TABLE[Wy shr 8];
+      Wt := Wy shr 8;
 
       for I := 0 to Count - 1 do
       begin
@@ -4049,7 +4037,7 @@ begin
         Inc(PDst);
       end;
 
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wy * Wx2) shr 24]);
+      CombineMem(Value, PDst^, (Wy * Wx2) shr 24);
     end;
 
     PDst := PixelPtr[X1F, YF + 1];
@@ -4057,10 +4045,10 @@ begin
     Wy := Wy xor $ffff;
     if Wy > 0 then
     begin
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wy * Wx1) shr 24]);
+      CombineMem(Value, PDst^, (Wy * Wx1) shr 24);
       Inc(PDst);
 
-      Wt := GAMMA_ENCODING_TABLE[Wy shr 8];
+      Wt := Wy shr 8;
 
       for I := 0 to Count - 1 do
       begin
@@ -4068,7 +4056,7 @@ begin
         Inc(PDst);
       end;
 
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wy * Wx2) shr 24]);
+      CombineMem(Value, PDst^, (Wy * Wx2) shr 24);
     end;
 
     EMMS;
@@ -4253,10 +4241,10 @@ begin
     Count := Y2F - Y1F - 1;
     if Wx > 0 then
     begin
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wx * Wy1) shr 24]);
+      CombineMem(Value, PDst^, (Wx * Wy1) shr 24);
       Inc(PDst, FWidth);
 
-      Wt := GAMMA_ENCODING_TABLE[Wx shr 8];
+      Wt := Wx shr 8;
 
       for I := 0 to Count - 1 do
       begin
@@ -4264,7 +4252,7 @@ begin
         Inc(PDst, FWidth);
       end;
 
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wx * Wy2) shr 24]);
+      CombineMem(Value, PDst^, (Wx * Wy2) shr 24);
     end;
 
     PDst := PixelPtr[XF + 1, Y1F];
@@ -4272,10 +4260,10 @@ begin
     Wx := Wx xor $ffff;
     if Wx > 0 then
     begin
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wx * Wy1) shr 24]);
+      CombineMem(Value, PDst^, (Wx * Wy1) shr 24);
       Inc(PDst, FWidth);
 
-      Wt := GAMMA_ENCODING_TABLE[Wx shr 8];
+      Wt := Wx shr 8;
 
       for I := 0 to Count - 1 do
       begin
@@ -4283,7 +4271,7 @@ begin
         Inc(PDst, FWidth);
       end;
 
-      CombineMem(Value, PDst^, GAMMA_ENCODING_TABLE[(Wx * Wy2) shr 24]);
+      CombineMem(Value, PDst^, (Wx * Wy2) shr 24);
     end;
 
     EMMS;
@@ -5335,10 +5323,10 @@ begin
         Inc(Y1, Sy);
         CI := EC shr 8;
         P := @Bits[X1 + Y1 * Width];
-        BlendMemEx(Value, P^, GAMMA_ENCODING_TABLE[CI xor $FF]);
+        BlendMemEx(Value, P^, CI xor $FF);
 
         Inc(P, Sx);
-        BlendMemEx(Value, P^, GAMMA_ENCODING_TABLE[CI]);
+        BlendMemEx(Value, P^, CI);
       end;
     end else // DY <= DX
     begin
@@ -5358,11 +5346,11 @@ begin
         Inc(X1, Sx);
         CI := EC shr 8;
         P := @Bits[X1 + Y1 * Width];
-        BlendMemEx(Value, P^, GAMMA_ENCODING_TABLE[CI xor $FF]);
+        BlendMemEx(Value, P^, CI xor $FF);
 
         if Sy = 1 then
           Inc(P, Width) else Dec(P, Width);
-        BlendMemEx(Value, P^, GAMMA_ENCODING_TABLE[CI]);
+        BlendMemEx(Value, P^, CI);
       end;
     end;
 
@@ -5548,7 +5536,7 @@ begin
         while xd <> term do
         begin
           Inc(xd, -Sx);
-          BlendMemEx(Value, Bits[D1^ + D2^ * Width], GAMMA_ENCODING_TABLE[ED shr 8]);
+          BlendMemEx(Value, Bits[D1^ + D2^ * Width], ED shr 8);
           Dec(ED, EA);
         end;
 
@@ -5647,10 +5635,10 @@ begin
       begin
         CI := EC shr 8;
         P := @Bits[D1^ + D2^ * Width];
-        BlendMemEx(Value, P^, GAMMA_ENCODING_TABLE[CI xor $FF]);
+        BlendMemEx(Value, P^, CI xor $FF);
 
         Inc(P, PI);
-        BlendMemEx(Value, P^, GAMMA_ENCODING_TABLE[CI]);
+        BlendMemEx(Value, P^, CI);
 
         // check for overflow and jump to next line...
         D := EC;
@@ -5669,7 +5657,7 @@ begin
     begin
       while xd <> rem do
       begin
-        BlendMemEx(Value, Bits[D1^ + D2^ * Width], GAMMA_ENCODING_TABLE[EC shr 8 xor $FF]);
+        BlendMemEx(Value, Bits[D1^ + D2^ * Width], EC shr 8 xor $FF);
         Inc(EC, EA);
         Inc(xd, Sx);
       end;
@@ -7556,80 +7544,41 @@ begin
   end;
 end;
 
-procedure TBitmap32.RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32);
+procedure TBitmap32.RenderText(X, Y: Integer; const Text: string; Color: TColor32; AntiAlias: boolean);
 var
-  B, B2: TBitmap32;
+  B: TBitmap32;
   Sz: TSize;
-{$IFNDEF PLATFORM_INDEPENDENT}
-  SzSpace: TSize;
-{$ENDIF}
   Alpha: TColor32;
-  StockCanvas: TCanvas;
 begin
   if Empty then
     Exit;
 
-  Alpha := Color shr 24;
-  Color := Color and $00FFFFFF;
-  AALevel := Constrain(AALevel, -1, 4);
+  Alpha := TColor32Entry(Color).A;
+  TColor32Entry(Color).A := 0;
 
-  {$IFDEF FPC}
-  if AALevel > -1 then
-    Font.Quality := fqNonAntialiased
+{$IFDEF FPC}
+  if (AntiAlias) then
+    Font.Quality := fqAntialiased
   else
-    Font.Quality := fqAntialiased;
-  {$ELSE}
-  if AALevel > -1 then
-    SetFontAntialiasing(Font, NONANTIALIASED_QUALITY)
+    Font.Quality := fqNonAntialiased;
+{$ELSE}
+  if (AntiAlias) then
+    SetFontAntialiasing(Font, ANTIALIASED_QUALITY)
   else
-    SetFontAntialiasing(Font, ANTIALIASED_QUALITY);
-  {$ENDIF}
+    SetFontAntialiasing(Font, NONANTIALIASED_QUALITY);
+{$ENDIF}
 
   { TODO : Optimize Clipping here }
   B := TBitmap32.Create;
   try
-    if AALevel <= 0 then
-    begin
-      Sz := Self.TextExtent(Text) + Self.TextExtent(' ');
-      B.SetSize(Sz.cX, Sz.cY);
-      B.Font := Font;
-      B.Clear(0);
-      B.Font.Color := clWhite;
-      B.Textout(0, 0, Text);
-      TextBlueToAlpha(B, Color);
-    end
-    else
-    begin
-      StockCanvas := StockBitmap.Canvas;
-      StockCanvas.Lock;
-      try
-        StockCanvas.Font := Font;
-        StockCanvas.Font.Size := Font.Size shl AALevel;
-{$IFDEF PLATFORM_INDEPENDENT}
-        Sz := StockCanvas.TextExtent(Text) + StockCanvas.TextExtent(' ');
-{$ELSE}
-        GetTextExtentPoint32(StockCanvas.Handle, PChar(Text), Length(Text), Sz);
-        GetTextExtentPoint32(StockCanvas.Handle, PChar(string(' ')), 1, SzSpace);
-        Sz := Sz + SzSpace;
-{$ENDIF}
-        Sz.Cx := (Sz.cx shr AALevel + 1) shl AALevel;
-        Sz.Cy := (Sz.cy shr AALevel + 1) shl AALevel;
-        B2 := TBitmap32.Create;
-        try
-          B2.SetSize(Sz.Cx, Sz.Cy);
-          B2.Clear(0);
-          B2.Font := StockCanvas.Font;
-          B2.Font.Color := clWhite;
-          B2.Textout(0, 0, Text);
-          B.SetSize(Sz.cx shr AALevel, Sz.cy shr AALevel);
-          TextScaleDown(B, B2, AALevel, Color);
-        finally
-          B2.Free;
-        end;
-      finally
-        StockCanvas.Unlock;
-      end;
-    end;
+    Sz := Self.TextExtent(Text) + Self.TextExtent(' ');
+    B.SetSize(Sz.cX, Sz.cY);
+    B.Font := Font;
+    B.Clear(0);
+    B.Font.Color := clWhite;
+
+    B.Textout(0, 0, Text);
+    TextBlueToAlpha(B, Color);
 
     B.DrawMode := dmBlend;
     B.MasterAlpha := Alpha;
@@ -7640,11 +7589,16 @@ begin
     B.Free;
   end;
 
-  {$IFDEF FPC}
+{$IFDEF FPC}
   Font.Quality := fqDefault;
-  {$ELSE}
+{$ELSE}
   SetFontAntialiasing(Font, DEFAULT_QUALITY);
-  {$ENDIF}
+{$ENDIF}
+end;
+
+procedure TBitmap32.RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32);
+begin
+  RenderText(X, Y, Text, Color, (AALevel < 0));
 end;
 
 // -------------------------------------------------------------------
