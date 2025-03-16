@@ -7144,7 +7144,7 @@ var
 begin
   if (Value <> '') and (FResampler.ClassName <> Value) and (ResamplerList <> nil) then
   begin
-    ResamplerClass := TCustomResamplerClass(ResamplerList.Find(Value));
+    ResamplerClass := ResamplerList.Find(Value);
     if (ResamplerClass <> nil) then
       ResamplerClass.Create(Self);
   end;
